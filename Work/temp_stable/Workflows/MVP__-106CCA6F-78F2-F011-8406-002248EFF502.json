@@ -1,0 +1,254 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_excelonlinebusiness": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "cr4c3_sharedexcelonlinebusiness_aef5b"
+        },
+        "api": {
+          "name": "shared_excelonlinebusiness"
+        }
+      },
+      "shared_approvals": {
+        "runtimeSource": "invoker",
+        "connection": {
+          "connectionReferenceLogicalName": "cr4c3_sharedapprovals_9e4d6"
+        },
+        "api": {
+          "name": "shared_approvals"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "splitOn": "@triggerBody()['rows']",
+          "metadata": {
+            "013WUNIRMSKGOAVNZNANALEBLNIHHVZ7QM": "/試薬・資材等発注用/CGT発注依頼票/MVP_発注申請/【発注自動化テスト用】CGT発注依頼票_2021_241003～.xlsx",
+            "operationMetadataId": "8e3da597-1eef-4899-b238-ba10405800f2",
+            "tableId": "{1E17A117-320C-423F-B150-36D753D6F27A}"
+          },
+          "type": "Request",
+          "kind": "ApiConnection",
+          "inputs": {
+            "operationId": "GetRawAndFormattedTableSchema",
+            "parameters": {
+              "source": "groups/c8e919ed-79c2-428b-a45d-be627208e41f",
+              "drive": "b!Wv4Xj51psEeqI2BmipgN6lnJUJbb8ExIvkyQnBV56I7QOZ-pJqg1S4e0S6tijZhV",
+              "file": "013WUNIRMSKGOAVNZNANALEBLNIHHVZ7QM",
+              "table": "{1E17A117-320C-423F-B150-36D753D6F27A}",
+              "formattedPostfix": "Formatted"
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "rows": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "entity": {
+                        "properties": {
+                          "ステータス_Formatted": {
+                            "title": "ステータス (Formatted)",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object",
+                        "required": []
+                      }
+                    }
+                  }
+                }
+              },
+              "required": [
+                "rows"
+              ]
+            },
+            "host": {
+              "connection": {
+                "name": "@parameters('$connections')['shared_excelonlinebusiness']['connectionId']"
+              }
+            }
+          }
+        }
+      },
+      "actions": {
+        "条件": {
+          "actions": {
+            "行の更新": {
+              "metadata": {
+                "013WUNIRMSKGOAVNZNANALEBLNIHHVZ7QM": "/試薬・資材等発注用/CGT発注依頼票/MVP_発注申請/【発注自動化テスト用】CGT発注依頼票_2021_241003～.xlsx",
+                "operationMetadataId": "6d128003-6506-4c75-a765-a24262790fc1",
+                "tableId": "{1E17A117-320C-423F-B150-36D753D6F27A}"
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "source": "groups/c8e919ed-79c2-428b-a45d-be627208e41f",
+                  "drive": "b!Wv4Xj51psEeqI2BmipgN6lnJUJbb8ExIvkyQnBV56I7QOZ-pJqg1S4e0S6tijZhV",
+                  "file": "013WUNIRMSKGOAVNZNANALEBLNIHHVZ7QM",
+                  "table": "{1E17A117-320C-423F-B150-36D753D6F27A}",
+                  "idColumn": "ID_x0023_\n(YYMM-XXX-PJ code)",
+                  "id": "@triggerBody()?['ID_x0023_\n(YYMM-XXX-PJ code)']",
+                  "item/ステータス": "申請中"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+                  "connectionName": "shared_excelonlinebusiness",
+                  "operationId": "PatchItem"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                }
+              }
+            },
+            "開始して承認を待機": {
+              "runAfter": {
+                "行の更新": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "d347ac08-59eb-4fc0-8f4f-9a554515ef76"
+              },
+              "type": "OpenApiConnectionWebhook",
+              "inputs": {
+                "parameters": {
+                  "approvalType": "Basic",
+                  "WebhookApprovalCreationInput/title": "発注承認",
+                  "WebhookApprovalCreationInput/assignedTo": "sengas@cellgentech.com",
+                  "WebhookApprovalCreationInput/enableNotifications": true,
+                  "WebhookApprovalCreationInput/enableReassignment": true
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+                  "connectionName": "shared_approvals",
+                  "operationId": "StartAndWaitForAnApproval"
+                },
+                "authentication": {
+                  "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                  "type": "Raw"
+                }
+              }
+            },
+            "条件_2": {
+              "actions": {
+                "行の更新_2": {
+                  "metadata": {
+                    "013WUNIRMSKGOAVNZNANALEBLNIHHVZ7QM": "/試薬・資材等発注用/CGT発注依頼票/MVP_発注申請/【発注自動化テスト用】CGT発注依頼票_2021_241003～.xlsx",
+                    "operationMetadataId": "4272e1a9-6552-48a3-815c-81acbfe5e9e3",
+                    "tableId": "{1E17A117-320C-423F-B150-36D753D6F27A}"
+                  },
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "source": "groups/c8e919ed-79c2-428b-a45d-be627208e41f",
+                      "drive": "b!Wv4Xj51psEeqI2BmipgN6lnJUJbb8ExIvkyQnBV56I7QOZ-pJqg1S4e0S6tijZhV",
+                      "file": "013WUNIRMSKGOAVNZNANALEBLNIHHVZ7QM",
+                      "table": "{1E17A117-320C-423F-B150-36D753D6F27A}",
+                      "idColumn": "ID_x0023_\n(YYMM-XXX-PJ code)",
+                      "id": "@triggerBody()?['entity']?['ID_x0023_\n(YYMM-XXX-PJ code)_Formatted']",
+                      "item/承認日時": "完了日",
+                      "item/承認コメント": "応答の概要",
+                      "item/承認結果": "結果"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+                      "connectionName": "shared_excelonlinebusiness",
+                      "operationId": "PatchItem"
+                    },
+                    "authentication": {
+                      "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                      "type": "Raw"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "開始して承認を待機": [
+                  "Succeeded"
+                ]
+              },
+              "else": {
+                "actions": {
+                  "行の更新_3": {
+                    "metadata": {
+                      "013WUNIRMSKGOAVNZNANALEBLNIHHVZ7QM": "/試薬・資材等発注用/CGT発注依頼票/MVP_発注申請/【発注自動化テスト用】CGT発注依頼票_2021_241003～.xlsx",
+                      "operationMetadataId": "ea861dd0-24ae-4277-aa42-c93e532e1f2f",
+                      "tableId": "{1E17A117-320C-423F-B150-36D753D6F27A}"
+                    },
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "source": "groups/c8e919ed-79c2-428b-a45d-be627208e41f",
+                        "drive": "b!Wv4Xj51psEeqI2BmipgN6lnJUJbb8ExIvkyQnBV56I7QOZ-pJqg1S4e0S6tijZhV",
+                        "file": "013WUNIRMSKGOAVNZNANALEBLNIHHVZ7QM",
+                        "table": "{1E17A117-320C-423F-B150-36D753D6F27A}",
+                        "idColumn": "ID_x0023_\n(YYMM-XXX-PJ code)",
+                        "id": "@outputs('行の更新')?['body/ID_x0023_\n(YYMM-XXX-PJ code)']",
+                        "item/ステータス": "却下",
+                        "item/承認日時": "完了日",
+                        "item/承認コメント": "応答の概要",
+                        "item/承認結果": "結果"
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness",
+                        "connectionName": "shared_excelonlinebusiness",
+                        "operationId": "PatchItem"
+                      },
+                      "authentication": {
+                        "value": "@json(decodeBase64(triggerOutputs().headers['X-MS-APIM-Tokens']))['$ConnectionKey']",
+                        "type": "Raw"
+                      }
+                    }
+                  }
+                }
+              },
+              "expression": {
+                "equals": [
+                  "@outputs('開始して承認を待機')?['body/outcome']",
+                  "Approved"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "ef5dc5f9-e40f-40cf-a36a-20fc4c385a7b"
+              },
+              "type": "If"
+            }
+          },
+          "runAfter": {},
+          "else": {
+            "actions": {}
+          },
+          "expression": {
+            "equals": [
+              "@triggerBody()?['entity']?['ステータス_Formatted']",
+              "下書き"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "7af6987d-3b18-44d0-8857-4721bcb5bf1b"
+          },
+          "type": "If"
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
