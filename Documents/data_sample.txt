@@ -1,0 +1,21 @@
+品名:
+['Screw cap micro tube, 1.5 ml, PCR Performance Tested, Low protein-binding', 'NewSapphire フィルターチップ 液体低残留 ユニバーサル 300μl ナチュラル 滅菌済 PP 960入', nan, nan, nan]
+
+メーカー名:
+['ザルスタット', 'Greiner Bio-One', nan, nan, nan]
+
+メーカーコード:
+['72.703.600', 776363, nan, nan, nan]
+
+業者:
+[nan, '岩井', nan, nan, nan]
+
+納品日:
+[nan, nan, nan, nan, nan]
+
+保管場所:
+[nan, nan, nan, nan, nan]
+
+保存:
+[nan, nan, nan, nan, nan]
+

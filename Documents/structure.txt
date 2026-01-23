@@ -1,0 +1,11 @@
+先頭10行 x 10列:
+行0: ['ID#', 'PJID(杏林)', '品名', 'メーカー名', 'メーカーコード', '業者', '納品日', '保管場所', '保存', '発注数量']
+行1: ['2601-028-ZC', 'ZC', 'Screw cap micro tube, 1.5 ml, PCR Performance Tested, Low protein-binding', 'ザルスタット', '72.703.600', nan, nan, nan, nan, 1]
+行2: ['2601-029-ZC', 'ZC', 'NewSapphire フィルターチップ 液体低残留 ユニバーサル 300μl ナチュラル 滅菌済 PP 960入', 'Greiner Bio-One', 776363, '岩井', nan, nan, nan, 2]
+行3: [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan]
+行4: [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan]
+行5: [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan]
+行6: [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan]
+行7: [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan]
+行8: [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan]
+行9: [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan]
