@@ -1,7 +1,7 @@
 # SharePointリスト化プロジェクト 進捗まとめ
 
-**最終更新**: 2026年1月23日 17:59  
-**次回アクション**: Phase 7 スクリプト再実行（PnP.PowerShellモジュール確認後）
+**最終更新**: 2026年1月27日 14:14  
+**次回アクション**: Phase 7 手動作成継続（出庫記録リストの作成から）
 
 ---
 
@@ -13,11 +13,13 @@ graph LR
         P1[Phase 1-4<br/>承認フロー] 
         P6[Phase 6<br/>在庫管理リスト]
     end
+    subgraph 進行中
+        P7[Phase 7<br/>受入出庫]
+    end
     subgraph 計画中
         P5[Phase 5<br/>送付フロー]
     end
     subgraph 将来
-        P7[Phase 7<br/>受入出庫]
         P8[Phase 8<br/>データ連携]
     end
     P1 --> P5 --> P6 --> P7 --> P8
@@ -25,7 +27,7 @@ graph LR
     style P1 fill:#90EE90
     style P6 fill:#90EE90
     style P5 fill:#FFE4B5
-    style P7 fill:#E0E0E0
+    style P7 fill:#87CEEB
     style P8 fill:#E0E0E0
 ```
 
@@ -38,7 +40,7 @@ graph LR
 | 1-4 | 購買申請・承認フロー | ✅ 運用中 | - |
 | 5 | 承認後送付フロー | 📝 計画確定 | [Phase5_送付フロー計画書.md](Phase5_送付フロー計画書.md) |
 | **6** | **在庫管理リスト** | **✅ リスト作成完了** | [Phase6_在庫管理リスト計画書.md](Phase6_在庫管理リスト計画書.md) |
-| **7** | **受入・出庫記録** | **📝 スクリプト作成完了** | [Phase7_受入出庫記録計画書.md](Phase7_受入出庫記録計画書.md) |
+| **7** | **受入・出庫記録** | **🚧 手動作成中 (受入完了)** | [Phase7_受入出庫記録計画書.md](Phase7_受入出庫記録計画書.md) |
 | 8 | 大量データ連携 | 📋 将来対応 | [Phase8_大量データ連携計画書.md](Phase8_大量データ連携計画書.md) |
 
 ---
