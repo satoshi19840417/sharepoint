@@ -42,7 +42,7 @@ git commit -m "[Phase名] 作業内容の要約"
 
 // turbo
 ```powershell
-git push origin main
+git push origin master
 ```
 
 ## 注意事項
