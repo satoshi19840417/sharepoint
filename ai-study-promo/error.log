@@ -1,0 +1,28 @@
+
+> ai-study-promo@1.0.0 start
+> remotion preview src/index.ts
+
+[33m-------------[39m
+[33mVersion mismatch:[39m
+[33mExtra packages with wrong versions:[39m
+[33m  - zod: installed 3.25.76, required 3.22.3[39m
+[33m    See: https://www.remotion.dev/docs/schemas#prerequisites[39m
+
+[33mYou may experience breakages such as:[39m
+[33m- React context and hooks not working[39m
+[33m- Type errors and feature incompatibilities[39m
+[33m- Failed renders and unclear errors[39m
+
+[33mTo resolve:[39m
+[33m- Make sure your package.json has all Remotion packages pointing to the same version.[39m
+[33m- Remove the `^` character in front of a version to pin a package.[39m
+[33m- For zod, install exact version 3.22.3 (run: npx remotion add zod).[39m
+[33m- Run `npx remotion versions --log=verbose` to see the path of the modules resolved.[39m
+[33m-------------[39m
+
+TypeError: import_config.Config.setOutputFormat is not a function
+    at eval (eval at loadConfigFile (C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\ai-study-promo\node_modules\@remotion\cli\dist\load-config.js:55:5), <anonymous>:6:22)
+    at loadConfigFile (C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\ai-study-promo\node_modules\@remotion\cli\dist\load-config.js:55:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async initializeCli (C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\ai-study-promo\node_modules\@remotion\cli\dist\initialize-cli.js:15:25)
+    at async cli (C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\ai-study-promo\node_modules\@remotion\cli\dist\index.js:55:22)

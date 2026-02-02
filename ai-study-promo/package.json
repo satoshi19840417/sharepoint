@@ -1,0 +1,32 @@
+{
+    "name": "ai-study-promo",
+    "version": "1.0.0",
+    "description": "Promotional video for AI study group",
+    "scripts": {
+        "start": "remotion preview src/index.ts",
+        "build": "remotion render src/index.ts",
+        "upgrade": "remotion upgrade",
+        "test": "eslint src --ext ts,tsx,js,jsx"
+    },
+    "dependencies": {
+        "react": "^18.0.0",
+        "react-dom": "^18.0.0",
+        "remotion": "4.0.416",
+        "@remotion/media": "4.0.416",
+        "@remotion/player": "4.0.416",
+        "@remotion/zod-types": "4.0.416",
+        "zod": "3.22.3"
+    },
+    "devDependencies": {
+        "@types/react": "^18.0.0",
+        "@types/web": "^0.0.61",
+        "typescript": "^5.0.0",
+        "eslint": "^8.0.0",
+        "@remotion/cli": "4.0.416",
+        "@remotion/eslint-config": "4.0.416",
+        "@remotion/tailwind": "4.0.416",
+        "tailwindcss": "^3.4.1",
+        "postcss": "^8.4.35",
+        "autoprefixer": "^10.4.17"
+    }
+}
