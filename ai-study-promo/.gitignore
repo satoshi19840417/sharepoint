@@ -24,3 +24,8 @@ remotion-render-*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Generated Deliverables
+AI-study-room/deliverables/
+AI-study-room/*.pptx
+error.log
