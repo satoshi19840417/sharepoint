@@ -7,49 +7,57 @@
 
 ## Step 1: 発注書Wordテンプレート作成
 
-- [ ] 新規Word文書作成
-- [ ] Excel「発注書」シートのレイアウト再現
-- [ ] Content Control挿入（9フィールド）
-  - [ ] Title
-  - [ ] ItemName
-  - [ ] Manufacturer
-  - [ ] Quantity
-  - [ ] EstimatedAmount
-  - [ ] DeliveryAddress
-  - [ ] QuoteNumber
-  - [ ] VendorName
-  - [ ] OrderDate
-- [ ] コントロールプロパティでタイトルをSP内部名に設定
-- [ ] SharePointにアップロード
+- [x] 新規Word文書作成
+- [x] Excel「発注書」シートのレイアウト再現
+- [x] Content Control挿入（9フィールド）
+  - [x] Title
+  - [x] ItemName
+  - [x] Manufacturer
+  - [x] Quantity
+  - [x] EstimatedAmount
+  - [x] DeliveryAddress
+  - [x] QuoteNumber
+  - [x] VendorName
+  - [x] OrderDate
+- [x] コントロールプロパティでタイトルをSP内部名に設定
+- [x] SharePointにアップロード（※ローカルに `発注書テンプレート.docx` 作成完了、アップロードは手動）
+
+---
+
+## Step 0: テンプレート二重化対応（2026/02/04 追記）
+
+- [ ] Backupsから重複のないテンプレートを復元
+- [ ] `modify_word_template.py` を冪等化（既存ヘッダー/挨拶文/発注依頼者行がある場合は追加しない）
+- [ ] `create_test_samples.py` で再生成し、Wordで重複がないことを確認
 
 ---
 
 ## Step 2: 請書Excelテンプレート作成
 
-- [ ] 「発注請書」シートをコピー
-- [ ] 差し込みセル変更
-  - [ ] B3 → VendorName プレースホルダー
-  - [ ] G5 → OrderDate プレースホルダー
-  - [ ] B10 → ItemName プレースホルダー
-  - [ ] C10 → Manufacturer プレースホルダー
-  - [ ] D10 → Quantity プレースホルダー
-  - [ ] F10 → EstimatedAmount プレースホルダー
-- [ ] 計算セル確認（E10, F31, F32, F33の数式保持）
-- [ ] 業者入力セル設定（G10:G20, B35）
-- [ ] シート保護適用
-  - [ ] 編集許可範囲設定
-  - [ ] 入力規則設定（G10:G15は日付、G16:G20はテキスト）
-- [ ] SharePointにアップロード
+- [x] 「発注請書」シートをコピー
+- [x] 差し込みセル変更
+  - [x] B3 → VendorName プレースホルダー
+  - [x] G5 → OrderDate プレースホルダー
+  - [x] B10 → ItemName プレースホルダー
+  - [x] C10 → Manufacturer プレースホルダー
+  - [x] D10 → Quantity プレースホルダー
+  - [x] F10 → EstimatedAmount プレースホルダー
+- [x] 計算セル確認（E10, F31, F32, F33の数式保持）
+- [x] 業者入力セル設定（G10:G20, B35）
+- [x] シート保護適用
+  - [x] 編集許可範囲設定
+  - [x] 入力規則設定（G10:G15は日付、G16:G20はテキスト）
+- [x] SharePointにアップロード（※ローカルに `請書テンプレート.xlsx` 作成完了、アップロードは手動）
 
 ---
 
 ## Step 3: 検証
 
-- [ ] Word差し込みテスト
+- [x] Word差し込みテスト（シミュレーション完了: TestOutput参照）
 - [ ] PDF変換テスト
-- [ ] Excel差し込みテスト
-- [ ] 計算式確認
-- [ ] シート保護確認
+- [x] Excel差し込みテスト（シミュレーション完了: TestOutput参照）
+- [x] 計算式確認
+- [x] シート保護確認
 - [ ] 業者マスタ不一致テスト
 - [ ] Excel 2016互換性確認（表示崩れ・機能動作）
 
