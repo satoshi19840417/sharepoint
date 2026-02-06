@@ -1,0 +1,218 @@
+{
+    "properties": {
+        "connectionReferences": {
+            "shared_sharepointonline": {
+                "runtimeSource": "embedded",
+                "connection": {
+                    "connectionReferenceLogicalName": "cr4c3_sharedsharepointonline_bce50"
+                },
+                "api": {
+                    "name": "shared_sharepointonline"
+                }
+            },
+            "shared_approvals": {
+                "runtimeSource": "invoker",
+                "connection": {
+                    "connectionReferenceLogicalName": "cr4c3_sharedapprovals_9e4d6"
+                },
+                "api": {
+                    "name": "shared_approvals"
+                }
+            }
+        },
+        "definition": {
+            "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+            "contentVersion": "1.0.0.0",
+            "parameters": {
+                "$authentication": {
+                    "defaultValue": {},
+                    "type": "SecureObject"
+                },
+                "$connections": {
+                    "defaultValue": {},
+                    "type": "Object"
+                }
+            },
+            "triggers": {
+                "アイテムが作成または変更されたとき_承認用": {
+                    "recurrence": {
+                        "frequency": "Minute",
+                        "interval": 1
+                    },
+                    "splitOn": "@triggerOutputs()?['body/value']",
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                        "parameters": {
+                            "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                            "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd"
+                        },
+                        "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                            "connectionName": "shared_sharepointonline",
+                            "operationId": "GetOnUpdatedItems"
+                        },
+                        "authentication": "@parameters('$authentication')"
+                    },
+                    "conditions": [
+                        {
+                            "expression": "@and(equals(triggerBody()?['ApprovalRequestId'], null), equals(triggerBody()?['_x627f__x8a8d__x7d50__x679c_'], null), equals(triggerBody()?['field_8']?['Value'], '申請中'))"
+                        }
+                    ],
+                    "runtimeConfiguration": {
+                        "concurrency": {
+                            "runs": 1
+                        }
+                    }
+                }
+            },
+            "actions": {
+                "承認者チェック": {
+                    "actions": {
+                        "ロック_冪等性キー設定": {
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                                "parameters": {
+                                    "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                                    "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd",
+                                    "id": "@triggerBody()?['ID']",
+                                    "item/ApprovalRequestId": "@guid()",
+                                    "item/_x627f__x8a8d__x8005__x5b9f__x7e/Value": "承認待ち"
+                                },
+                                "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                    "connectionName": "shared_sharepointonline",
+                                    "operationId": "PatchItem"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                            }
+                        },
+                        "開始して承認を待機_SP": {
+                            "runAfter": {
+                                "ロック_冪等性キー設定": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "OpenApiConnectionWebhook",
+                            "inputs": {
+                                "parameters": {
+                                    "approvalType": "Basic",
+                                    "WebhookApprovalCreationInput/title": "【発注申請】@{triggerBody()?['Title']}",
+                                    "WebhookApprovalCreationInput/assignedTo": "@{if(equals(triggerBody()?['field_9'], null), 'sengas@cellgentech.com', concat('sengas@cellgentech.com;', triggerBody()?['field_9']))}",
+                                    "WebhookApprovalCreationInput/details": "申請ID: @{triggerBody()?['ID']}\n品目: @{triggerBody()?['OData__x54c1__x76ee__xff08_Lookup_xff0']?['Value']}\n数量: @{triggerBody()?['field_5']}\n備考: @{triggerBody()?['field_11']}",
+                                    "WebhookApprovalCreationInput/itemLink": "https://cellgentech.sharepoint.com/sites/SP__Prototype/Lists/62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd/DispForm.aspx?ID=@{triggerBody()?['ID']}",
+                                    "WebhookApprovalCreationInput/itemLinkDescription": "SharePointで詳細を確認",
+                                    "WebhookApprovalCreationInput/enableNotifications": true,
+                                    "WebhookApprovalCreationInput/enableReassignment": true
+                                },
+                                "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+                                    "connectionName": "shared_approvals",
+                                    "operationId": "StartAndWaitForAnApproval"
+                                },
+                                "authentication": "@parameters('$authentication')"
+                            }
+                        },
+                        "承認結果分岐": {
+                            "runAfter": {
+                                "開始して承認を待機_SP": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "cases": {
+                                "承認": {
+                                    "case": "Approve",
+                                    "actions": {
+                                        "承認済み更新": {
+                                            "type": "OpenApiConnection",
+                                            "inputs": {
+                                                "parameters": {
+                                                    "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                                                    "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd",
+                                                    "id": "@triggerBody()?['ID']",
+                                                    "item/_x627f__x8a8d__x7d50__x679c_": true,
+                                                    "item/_x627f__x8a8d__x8005__x5b9f__x7e/Value": "完了",
+                                                    "item/ApprovalRespondedAt": "@utcNow()",
+                                                    "item/ApprovedBy": "@outputs('開始して承認を待機_SP')?['body/responses'][0]?['responder']?['displayName']",
+                                                    "item/ApprovalComment": "@outputs('開始して承認を待機_SP')?['body/responses'][0]?['comments']",
+                                                    "item/SendStatus/Value": "送付待ち",
+                                                    "item/SendGate": "false"
+                                                },
+                                                "host": {
+                                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                                    "connectionName": "shared_sharepointonline",
+                                                    "operationId": "PatchItem"
+                                                },
+                                                "authentication": "@parameters('$authentication')"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "default": {
+                                "actions": {
+                                    "却下更新": {
+                                        "type": "OpenApiConnection",
+                                        "inputs": {
+                                            "parameters": {
+                                                "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                                                "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd",
+                                                "id": "@triggerBody()?['ID']",
+                                                "item/_x627f__x8a8d__x7d50__x679c_": false,
+                                                "item/_x627f__x8a8d__x8005__x5b9f__x7e/Value": "完了",
+                                                "item/ApprovalRespondedAt": "@utcNow()",
+                                                "item/ApprovedBy": "@outputs('開始して承認を待機_SP')?['body/responses'][0]?['responder']?['displayName']",
+                                                "item/ApprovalComment": "@outputs('開始して承認を待機_SP')?['body/responses'][0]?['comments']",
+                                                "item/SendTarget": false
+                                            },
+                                            "host": {
+                                                "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                                "connectionName": "shared_sharepointonline",
+                                                "operationId": "PatchItem"
+                                            },
+                                            "authentication": "@parameters('$authentication')"
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": "@outputs('開始して承認を待機_SP')?['body/outcome']",
+                            "type": "Switch"
+                        }
+                    },
+                    "runAfter": {},
+                    "else": {
+                        "actions": {
+                            "承認者未設定エラー": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                    "parameters": {
+                                        "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                                        "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd",
+                                        "id": "@triggerBody()?['ID']",
+                                        "item/_x627f__x8a8d__x8005__x5b9f__x7e/Value": "エラー",
+                                        "item/ApprovalComment": "承認者が設定されていません"
+                                    },
+                                    "host": {
+                                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                                        "connectionName": "shared_sharepointonline",
+                                        "operationId": "PatchItem"
+                                    },
+                                    "authentication": "@parameters('$authentication')"
+                                }
+                            }
+                        }
+                    },
+                    "expression": {
+                        "equals": [
+                            1,
+                            1
+                        ]
+                    },
+                    "type": "If"
+                }
+            },
+            "outputs": {}
+        },
+        "templateName": null
+    },
+    "schemaVersion": "1.0.0.0"
+}

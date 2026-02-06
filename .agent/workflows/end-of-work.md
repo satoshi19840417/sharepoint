@@ -12,15 +12,15 @@ description: 作業終了時の引継ぎとGitHubプッシュ
 
 作業中に作成した以下のファイルを、プロジェクトの適切なフォルダにコピーする：
 
-- `implementation_plan.md` → `Documents/01_Phases/[Phase名]/[Phase名]_[作業名]計画.md`
-- `task.md` → `Documents/01_Phases/[Phase名]/[Phase名]_[作業名]タスク.md`
-- `walkthrough.md` → `Documents/01_Phases/[Phase名]/[Phase名]_[作業名]引継ぎ.md`
+- `implementation_plan.md` → `01_Documents/01_Phases/[Phase名]/[Phase名]_[作業名]計画.md`
+- `task.md` → `01_Documents/01_Phases/[Phase名]/[Phase名]_[作業名]タスク.md`
+- `walkthrough.md` → `01_Documents/01_Phases/[Phase名]/[Phase名]_[作業名]引継ぎ.md`
 
 ```powershell
 # 例: Phase5テンプレート作成の場合
-Copy-Item "$env:USERPROFILE\.gemini\antigravity\brain\[conversation-id]\implementation_plan.md" "Documents\01_Phases\Phase5_送付フロー\Phase5_テンプレート作成計画.md"
-Copy-Item "$env:USERPROFILE\.gemini\antigravity\brain\[conversation-id]\task.md" "Documents\01_Phases\Phase5_送付フロー\Phase5_テンプレート作成タスク.md"
-Copy-Item "$env:USERPROFILE\.gemini\antigravity\brain\[conversation-id]\walkthrough.md" "Documents\01_Phases\Phase5_送付フロー\Phase5_テンプレート作成引継ぎ.md"
+Copy-Item "$env:USERPROFILE\.gemini\antigravity\brain\[conversation-id]\implementation_plan.md" "01_Documents\01_Phases\Phase5_送付フロー\Phase5_テンプレート作成計画.md"
+Copy-Item "$env:USERPROFILE\.gemini\antigravity\brain\[conversation-id]\task.md" "01_Documents\01_Phases\Phase5_送付フロー\Phase5_テンプレート作成タスク.md"
+Copy-Item "$env:USERPROFILE\.gemini\antigravity\brain\[conversation-id]\walkthrough.md" "01_Documents\01_Phases\Phase5_送付フロー\Phase5_テンプレート作成引継ぎ.md"
 ```
 
 ### 2. Gitステージング
@@ -47,6 +47,6 @@ git push origin master
 
 ## 注意事項
 
-- `.gitignore` に含まれるファイル（Work/, Archive/, 一時ファイル等）はコミットされない
+- `.gitignore` に含まれるファイル（99_Archive/Old_Work/, Archive/, 一時ファイル等）はコミットされない
 - 成果物は必ずプロジェクト内のDocumentsフォルダに移動してからコミットすること
 - コミットメッセージにはPhase名と作業内容を含めること

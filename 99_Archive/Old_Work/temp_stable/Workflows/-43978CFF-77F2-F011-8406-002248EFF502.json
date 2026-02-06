@@ -1,0 +1,339 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "cr4c3_sharedsharepointonline_bce50"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "項目が作成されたとき": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+              "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "operationId": "GetOnNewItems",
+              "connectionName": "shared_sharepointonline"
+            }
+          },
+          "conditions": [],
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          }
+        }
+      },
+      "actions": {
+        "作成": {
+          "runAfter": {
+            "For_each": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@formatDateTime(convertTimeZone(utcNow(),'UTC','Tokyo Standard Time'),'yyMM')\r\n"
+        },
+        "For_each": {
+          "foreach": "@triggerOutputs()?['body/value']",
+          "actions": {
+            "項目の取得": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                  "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd",
+                  "id": "@item()?['ID']\n"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "operationId": "GetItem",
+                  "connectionName": "shared_sharepointonline"
+                }
+              }
+            }
+          },
+          "runAfter": {},
+          "type": "Foreach"
+        },
+        "複数の項目の取得": {
+          "runAfter": {
+            "作成": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+              "table": "48ee4624-f62b-4c42-81d6-465f76ca1e64",
+              "$filter": "Prefix eq '@{outputs('作成')}'\n",
+              "$orderby": "ID desc",
+              "$top": 1
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "operationId": "GetItems",
+              "connectionName": "shared_sharepointonline"
+            }
+          }
+        },
+        "条件": {
+          "actions": {
+            "現在番号": {
+              "type": "Compose",
+              "inputs": "@first(body('複数の項目の取得')?['value'])"
+            },
+            "CurrentNoInt": {
+              "runAfter": {
+                "現在番号": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": "@int(outputs('現在番号')?['CurrentNo'])"
+            },
+            "NextNo": {
+              "runAfter": {
+                "CurrentNoInt": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Compose",
+              "inputs": "@{add(outputs('CurrentNoInt'), 1)}\n"
+            },
+            "項目の更新": {
+              "runAfter": {
+                "NextNo": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                  "table": "48ee4624-f62b-4c42-81d6-465f76ca1e64",
+                  "id": "@outputs('現在番号')?['ID']",
+                  "item/CurrentNo": "@outputs('NextNo')"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "operationId": "PatchItem",
+                  "connectionName": "shared_sharepointonline"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "複数の項目の取得": [
+              "Succeeded"
+            ]
+          },
+          "else": {
+            "actions": {
+              "NextNo_False": {
+                "type": "Compose",
+                "inputs": 1
+              },
+              "項目の作成": {
+                "runAfter": {
+                  "NextNo_False": [
+                    "Succeeded"
+                  ]
+                },
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                    "table": "48ee4624-f62b-4c42-81d6-465f76ca1e64",
+                    "item/Title": "@outputs('作成')",
+                    "item/Prefix": "@outputs('作成')",
+                    "item/CurrentNo": 1
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                    "operationId": "PostItem",
+                    "connectionName": "shared_sharepointonline"
+                  }
+                }
+              }
+            }
+          },
+          "expression": {
+            "and": [
+              {
+                "greater": [
+                  "@length(body('複数の項目の取得')?['value'])",
+                  0
+                ]
+              },
+              {
+                "equals": [
+                  1,
+                  1
+                ]
+              }
+            ]
+          },
+          "type": "If"
+        },
+        "NextNo_Final": {
+          "runAfter": {
+            "条件": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@coalesce(outputs('NextNo'), outputs('NextNo_False'))"
+        },
+        "SerialText": {
+          "runAfter": {
+            "NextNo_Final": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@formatNumber(int(outputs('NextNo_Final')),'0000')"
+        },
+        "IssueNoText": {
+          "runAfter": {
+            "SerialText": [
+              "Succeeded"
+            ],
+            "ProjectCodeText": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@if(\r\n  empty(outputs('ProjectCodeText')),\r\n  concat(outputs('作成'), '-', outputs('SerialText')),\r\n  concat(outputs('作成'), '-', outputs('SerialText'), '-', outputs('ProjectCodeText'))\r\n)\r\n"
+        },
+        "TargetItemId": {
+          "runAfter": {
+            "RequestItemId": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@int(\r\n  string(\r\n    coalesce(\r\n      first(triggerOutputs()?['body/value'])?['ID'],\r\n      first(triggerOutputs()?['body/value'])?['Id'],\r\n      triggerOutputs()?['body/ID'],\r\n      triggerOutputs()?['body/Id'],\r\n      triggerBody()?['ID'],\r\n      triggerBody()?['Id']\r\n    )\r\n  )\r\n)"
+        },
+        "項目の更新1": {
+          "runAfter": {
+            "IssueNoText": [
+              "Succeeded"
+            ],
+            "RequestItemId": [
+              "Succeeded"
+            ]
+          },
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+              "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd",
+              "id": "@outputs('RequestItemId')",
+              "item/field_1": "@formatDateTime(\r\n  coalesce(triggerOutputs()?['body/field_1'], utcNow()),\r\n  'yyyy-MM-dd'\r\n)\r\n",
+              "item/field_5": "@if(\r\n  or(\r\n    equals(triggerBody()?['field_5'], null),\r\n    equals(string(triggerBody()?['field_5']), '')\r\n  ),\r\n  0,\r\n  int(float(triggerBody()?['field_5']))\r\n)",
+              "item/Title": "@outputs('IssueNoText')",
+              "item/field_8/Value": "申請中",
+              "item/SendTarget": false,
+              "item/SendStatus/Value": "送信待ち",
+              "item/ProjectCode/Value": "CO",
+              "item/OData__x63a1__x756a__x6e08_": false
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "operationId": "PatchItem",
+              "connectionName": "shared_sharepointonline"
+            }
+          }
+        },
+        "RequestItemId": {
+          "runAfter": {
+            "ProjectCodeText": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@coalesce(\r\n  triggerOutputs()?['body/ID'],\r\n  triggerOutputs()?['body/Id'],\r\n  triggerOutputs()?['body/ItemInternalId'],\r\n  triggerOutputs()?['body/itemInternalId'],\r\n  first(triggerOutputs()?['body/value'])?['ID'],\r\n  first(triggerOutputs()?['body/value'])?['Id'],\r\n  first(triggerOutputs()?['body/value'])?['ItemInternalId']\r\n)\r\n"
+        },
+        "ProjectCodeText": {
+          "runAfter": {
+            "変数の初期化": [
+              "Succeeded"
+            ]
+          },
+          "type": "Compose",
+          "inputs": "@coalesce(\r\n  first(body('GetRequestItem'))?['ProjectCode']?['Value'],\r\n  first(body('GetRequestItem'))?['ProjectCode'],\r\n  ''\r\n)\r\n"
+        },
+        "For_each_1": {
+          "foreach": "@triggerOutputs()?['body/value']",
+          "actions": {
+            "GetRequestItem": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                  "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd",
+                  "id": "@item()?['ID']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "operationId": "GetItem",
+                  "connectionName": "shared_sharepointonline"
+                }
+              }
+            }
+          },
+          "runAfter": {},
+          "type": "Foreach"
+        },
+        "変数の初期化": {
+          "runAfter": {
+            "For_each_1": [
+              "Succeeded"
+            ]
+          },
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "vNextNo",
+                "type": "integer",
+                "value": 0
+              }
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

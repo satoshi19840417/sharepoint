@@ -1,0 +1,181 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "cr4c3_sharedsharepointonline_bce50"
+        },
+        "api": {
+          "name": "shared_sharepointonline"
+        }
+      },
+      "shared_teams": {
+        "runtimeSource": "embedded",
+        "connection": {
+          "connectionReferenceLogicalName": "cr4c3_sharedteams_cb20f"
+        },
+        "api": {
+          "name": "shared_teams"
+        }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "アイテムが作成または変更されたとき": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Minute",
+            "interval": 1
+          },
+          "splitOn": "@triggerOutputs()?['body/value']",
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+              "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "connectionName": "shared_sharepointonline",
+              "operationId": "GetOnUpdatedItems"
+            },
+            "authentication": "@parameters('$authentication')"
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 1
+            }
+          }
+        }
+      },
+      "actions": {
+        "条件": {
+          "actions": {
+            "項目の更新": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                  "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd",
+                  "id": "@triggerBody()?['ID']",
+                  "item/field_1": "@triggerBody()?['field_1']",
+                  "item/field_5": "@triggerBody()?['field_5']",
+                  "item/SendStatus/Value": "送信中",
+                  "item/field_8/Value": "申請中"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchItem"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "チャットまたはチャネルでメッセージを投稿する": {
+              "runAfter": {
+                "ユーザーの_@mention_トークンを取得する": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "poster": "Flow bot",
+                  "location": "Channel",
+                  "body/recipient/groupId": "7f361b5d-fa9a-4e36-8be0-66cf94057116",
+                  "body/recipient/channelId": "19:Y-ji3TbVUlaTX8gy7IyZvCO8LKxwSEW4oeUb20FFZ381@thread.tacv2",
+                  "body/messageBody": "<p class=\"editor-paragraph\">@{outputs('ユーザーの_@mention_トークンを取得する')?['body/atMention']}</p><p class=\"editor-paragraph\">ご確認をお願いいたします。</p><p class=\"editor-paragraph\">【発注依頼】ID： @{outputs('項目の更新')?['body/ID']}<br>申請者：@{outputs('項目の更新')?['body/field_3/Value']}<br>品名：@{outputs('項目の更新')?['body/OData__x54c1__x76ee__xff08_Lookup_xff0/Value']} ／数量：@{outputs('項目の更新')?['body/field_5']}</p><p class=\"editor-paragraph\">備考：@{outputs('項目の更新')?['body/field_11']}</p>"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "connectionName": "shared_teams",
+                  "operationId": "PostMessageToConversation"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "項目の更新_2": {
+              "runAfter": {
+                "チャットまたはチャネルでメッセージを投稿する": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "dataset": "https://cellgentech.sharepoint.com/sites/SP__Prototype",
+                  "table": "62b6ee4c-05b5-42e3-b9be-fe9fcc1ccdcd",
+                  "id": "@outputs('項目の更新')?['body/ID']",
+                  "item/field_1": "@outputs('項目の更新')?['body/field_1']",
+                  "item/field_5": "@outputs('項目の更新')?['body/field_5']",
+                  "item/SendTarget": false,
+                  "item/SendStatus/Value": "送信済",
+                  "item/field_8/Value": "@outputs('項目の更新')?['body/field_8/Value']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                  "connectionName": "shared_sharepointonline",
+                  "operationId": "PatchItem"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            },
+            "ユーザーの_@mention_トークンを取得する": {
+              "runAfter": {
+                "項目の更新": [
+                  "Succeeded"
+                ]
+              },
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "userId": "sengas@cellgentech.com"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_teams",
+                  "connectionName": "shared_teams",
+                  "operationId": "AtMentionUser"
+                },
+                "authentication": "@parameters('$authentication')"
+              }
+            }
+          },
+          "runAfter": {},
+          "else": {
+            "actions": {}
+          },
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@triggerBody()?['SendTarget']",
+                  true
+                ]
+              }
+            ]
+          },
+          "type": "If"
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
