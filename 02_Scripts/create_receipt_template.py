@@ -9,6 +9,7 @@ Power Automateで差し込み可能なExcelテンプレートを生成
 - {{Manufacturer}}: メーカー（C10）
 - {{Quantity}}: 数量（D10）
 - {{EstimatedAmount}}: 見積額（F10）
+- {{QuoteNumber}}: 見積番号（H10）
 
 計算セル:
 - E10: 単価（=F10/D10）
@@ -17,8 +18,9 @@ Power Automateで差し込み可能なExcelテンプレートを生成
 - F33: 合計（=F31+F32）
 
 業者入力セル（編集可能）:
-- G10:G20: 納期・備考欄
-- B35: 担当者サイン
+- G10:G30: 納期・備考欄
+- C35:E35: 担当者サイン
+- G35: 日付
 """
 
 from openpyxl import Workbook
@@ -51,6 +53,7 @@ def create_receipt_template():
     ws.column_dimensions['E'].width = 12
     ws.column_dimensions['F'].width = 15
     ws.column_dimensions['G'].width = 20
+    ws.column_dimensions['H'].width = 16
     
     # タイトル
     ws['D1'] = '発 注 請 書'
@@ -74,7 +77,7 @@ def create_receipt_template():
     ws['B7'] = '下記の通り発注を受領いたしましたことをご報告申し上げます。'
     
     # 明細ヘッダー
-    headers = ['No.', '品目', 'メーカー', '数量', '単価', '金額', '納期・備考']
+    headers = ['No.', '品目', 'メーカー', '数量', '単価', '金額', '納期・備考', '見積番号']
     for col, header in enumerate(headers, 1):
         cell = ws.cell(row=9, column=col)
         cell.value = header
@@ -116,11 +119,15 @@ def create_receipt_template():
     ws['G10'] = ''
     ws['G10'].border = thin_border
     ws['G10'].protection = Protection(locked=False)  # 編集可能
-    
+
+    # 見積番号
+    ws['H10'] = '{{QuoteNumber}}'
+    ws['H10'].border = thin_border
+
     # 明細行（2～21行：空行）
     for row in range(11, 31):
-        ws.cell(row=row, column=1).value = row - 9 if row < 21 else ''
-        for col in range(1, 8):
+        ws.cell(row=row, column=1).value = row - 9
+        for col in range(1, 9):
             cell = ws.cell(row=row, column=col)
             cell.border = thin_border
             if col == 7:  # 納期・備考欄は編集可能
@@ -170,12 +177,12 @@ def create_receipt_template():
     return wb
 
 if __name__ == '__main__':
-    output_path = r'c:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\Documents\02_Templates\請書テンプレート.xlsx'
+    output_path = r'c:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\01_Documents\02_Templates\請書テンプレート.xlsx'
     
     wb = create_receipt_template()
     wb.save(output_path)
     
-    print(f'✅ 請書Excelテンプレートを作成しました: {output_path}')
+    print(f'[OK] 請書Excelテンプレートを作成しました: {output_path}')
     print()
     print('プレースホルダー一覧:')
     print('  - {{VendorName}}: 業者名（G3）')
@@ -184,6 +191,7 @@ if __name__ == '__main__':
     print('  - {{Manufacturer}}: メーカー（C10）')
     print('  - {{Quantity}}: 数量（D10）')
     print('  - {{EstimatedAmount}}: 見積額（F10）')
+    print('  - {{QuoteNumber}}: 見積番号（H10）')
     print()
     print('計算セル:')
     print('  - E10: 単価（=F10/D10）')

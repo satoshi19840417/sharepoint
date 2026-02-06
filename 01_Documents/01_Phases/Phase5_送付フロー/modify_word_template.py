@@ -46,9 +46,23 @@ def create_backup(file_path):
     shutil.copy2(file_path, backup_path)
     print(f"Backup created: {backup_path}")
 
+def normalize(text):
+    return "".join((text or "").split())
+
+def has_company_block(header_obj):
+    header_text = normalize("\n".join(p.text for p in header_obj.paragraphs))
+    if normalize("セルジェンテック株式会社") in header_text:
+        return True
+    for table in header_obj.tables:
+        tbl_text = normalize(table._element.xpath("string(.)"))
+        if normalize("セルジェンテック株式会社") in tbl_text:
+            return True
+    return False
+
 def add_content_to_header_obj(header_obj, logo_path):
-    # Check if we already added a table? (rudimentary check: count tables)
-    # But checking content is hard. Assuming we modify clean template or idempotent-ish.
+    if has_company_block(header_obj):
+        print("      Header already contains company block. Skipping.")
+        return False
     
     table = header_obj.add_table(rows=1, cols=2, width=Mm(170))
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -84,6 +98,7 @@ def add_content_to_header_obj(header_obj, logo_path):
         tbl = table._element
         header_obj._element.remove(tbl)
         header_obj._element.insert(0, tbl)
+    return True
 
 def find_sdt_by_tag_or_alias(parent_element, target_val):
     found = []
@@ -99,6 +114,22 @@ def find_sdt_by_tag_or_alias(parent_element, target_val):
             if tag_match or alias_match:
                 found.append(sdt)
     return found
+
+def has_greeting(doc):
+    marker = "平素よりお世話になっております。下記の通り発注させて頂きますのでご確認下さい。"
+    marker_norm = normalize(marker)
+    return any(marker_norm in normalize(p.text) for p in doc.paragraphs)
+
+def has_orderer_line(doc):
+    marker_norm = normalize("発注依頼者:")
+    if any(marker_norm in normalize(p.text) for p in doc.paragraphs):
+        return True
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                if marker_norm in normalize(cell.text):
+                    return True
+    return False
 
 # --- Main Logic ---
 
@@ -137,64 +168,70 @@ for i, section in enumerate(doc.sections):
 
 # 2. Greeting Text
 print("Inserting Greeting Text...")
-greeting_p = doc.add_paragraph(GREETING_TEXT)
-greeting_p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-body = doc._element.body
-p_element = greeting_p._element
-body.remove(p_element)
-
-# Insert after index 1 (Assuming Title/Spacer is 0) to avoid being top-most if Title exists
-if len(body) > 0:
-    body.insert(1, p_element)
+if has_greeting(doc):
+    print("  Greeting already exists. Skipping.")
 else:
-    body.insert(0, p_element)
+    greeting_p = doc.add_paragraph(GREETING_TEXT)
+    greeting_p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    body = doc._element.body
+    p_element = greeting_p._element
+    body.remove(p_element)
+
+    # Insert after index 1 (Assuming Title/Spacer is 0) to avoid being top-most if Title exists
+    if len(body) > 0:
+        body.insert(1, p_element)
+    else:
+        body.insert(0, p_element)
 
 
 # 3. Orderer Injection
 print("Injecting Orderer field...")
-target_tag = "DeliveryAddress"
-found_sdts = find_sdt_by_tag_or_alias(doc._element.body, target_tag)
-
-if not found_sdts:
-    print("WARNING: DeliveryAddress not found. Appending to end.")
-    doc.add_paragraph(ORDERER_TEXT)
+if has_orderer_line(doc):
+    print("  Orderer line already exists. Skipping.")
 else:
-    sdt = found_sdts[0]
-    parent = sdt.getparent()
-    
-    if parent.tag.endswith('p'): 
-        p_parent = parent.getparent()
-        index = list(p_parent).index(parent)
+    target_tag = "DeliveryAddress"
+    found_sdts = find_sdt_by_tag_or_alias(doc._element.body, target_tag)
+
+    if not found_sdts:
+        print("WARNING: DeliveryAddress not found. Appending to end.")
+        doc.add_paragraph(ORDERER_TEXT)
+    else:
+        sdt = found_sdts[0]
+        parent = sdt.getparent()
         
-        temp_p = doc.add_paragraph(ORDERER_TEXT)
-        temp_elm = temp_p._element
-        doc._element.body.remove(temp_elm) 
-        
-        # Insert after target paragraph
-        p_parent.insert(index + 1, temp_elm)
-        print("Inserted after paragraph.")
-        
-    elif parent.tag.endswith('tc'): 
-        # Inside Table Cell
-        # Iterate up to find the w:tc element
-        current = parent
-        while current is not None and not current.tag.endswith('tc'):
-            current = current.getparent()
+        if parent.tag.endswith('p'): 
+            p_parent = parent.getparent()
+            index = list(p_parent).index(parent)
             
-        if current is not None:
-            # Found TC
-            # Append paragraph to TC
-            p = OxmlElement('w:p')
-            r = OxmlElement('w:r')
-            t = OxmlElement('w:t')
-            t.text = ORDERER_TEXT
-            r.append(t)
-            p.append(r)
-            current.append(p)
-            print("Inserted into table cell.")
-        else:
-            print("Could not find table cell parent. Fallback append.")
-            doc.add_paragraph(ORDERER_TEXT)
+            temp_p = doc.add_paragraph(ORDERER_TEXT)
+            temp_elm = temp_p._element
+            doc._element.body.remove(temp_elm) 
+            
+            # Insert after target paragraph
+            p_parent.insert(index + 1, temp_elm)
+            print("Inserted after paragraph.")
+            
+        elif parent.tag.endswith('tc'): 
+            # Inside Table Cell
+            # Iterate up to find the w:tc element
+            current = parent
+            while current is not None and not current.tag.endswith('tc'):
+                current = current.getparent()
+                
+            if current is not None:
+                # Found TC
+                # Append paragraph to TC
+                p = OxmlElement('w:p')
+                r = OxmlElement('w:r')
+                t = OxmlElement('w:t')
+                t.text = ORDERER_TEXT
+                r.append(t)
+                p.append(r)
+                current.append(p)
+                print("Inserted into table cell.")
+            else:
+                print("Could not find table cell parent. Fallback append.")
+                doc.add_paragraph(ORDERER_TEXT)
 
 doc.save(target_template_path)
 print("Done.")

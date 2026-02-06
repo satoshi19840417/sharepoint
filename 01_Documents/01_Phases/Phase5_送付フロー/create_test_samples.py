@@ -1,13 +1,11 @@
 
 import os
 import copy
-import math
 import docx
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 from datetime import datetime
 import openpyxl
-from openpyxl.utils import range_boundaries
 
 # --- Configuration ---
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,23 +19,48 @@ excel_output_path = os.path.join(output_dir, "請書_検証用_MultiItem.xlsx")
 # --- Dummy Data ---
 DUMMY_DATA = {
     "Title": "検体解析業務委託",
-    "OrderID": "PO-20260204-001",
-    "Date": datetime.now().strftime("%Y/%m/%d"),
+    "OrderDate": datetime.now().strftime("%Y/%m/%d"),
     "VendorName": "テストサプライヤー株式会社",
-    "VendorAddress": "東京都港区芝浦3-1-1", # Assuming mapping
-    "DeliveryDate": "2026/03/31",
     "DeliveryAddress": "千葉県千葉市中央区亥鼻1-8-15\n千葉大亥鼻イノベーションプラザ208",
-    "RequestorName": "千賀 聡志", # For <<Orderer>>
-    # Totals will be calculated
+    "RequestorName": "千賀 聡志",
 }
 
 ITEMS = [
-    {"ItemName": "DNA抽出キット", "Quantity": 2, "Unit": "箱", "UnitPrice": 50000},
-    {"ItemName": "NGS解析サービス", "Quantity": 1, "Unit": "式", "UnitPrice": 900000},
-    {"ItemName": "サンプル輸送費", "Quantity": 1, "Unit": "回", "UnitPrice": 15000},
-    # Add more to test paging
-    {"ItemName": "試薬A", "Quantity": 5, "Unit": "本", "UnitPrice": 2000},
-    {"ItemName": "試薬B", "Quantity": 10, "Unit": "本", "UnitPrice": 1500},
+    {
+        "QuoteNumber": "Q-20260206-001",
+        "ItemName": "DNA抽出キット",
+        "Manufacturer": "メーカーA",
+        "Quantity": 2,
+        "UnitPrice": 50000,
+    },
+    {
+        "QuoteNumber": "Q-20260206-002",
+        "ItemName": "NGS解析サービス",
+        "Manufacturer": "メーカーB",
+        "Quantity": 1,
+        "UnitPrice": 900000,
+    },
+    {
+        "QuoteNumber": "",
+        "ItemName": "サンプル輸送費",
+        "Manufacturer": "メーカーC",
+        "Quantity": 1,
+        "UnitPrice": 15000,
+    },
+    {
+        "QuoteNumber": "Q-20260206-004",
+        "ItemName": "試薬A",
+        "Manufacturer": "メーカーD",
+        "Quantity": 5,
+        "UnitPrice": 2000,
+    },
+    {
+        "QuoteNumber": "Q-20260206-005",
+        "ItemName": "試薬B",
+        "Manufacturer": "メーカーE",
+        "Quantity": 10,
+        "UnitPrice": 1500,
+    },
 ]
 
 # --- Helper Functions (Word) ---
@@ -78,15 +101,31 @@ def populate_word_sdts(doc, data):
         if val in data:
             set_sdt_text(sdt, data[val])
 
+def iter_sdt_tags(element):
+    for sdt in element.iter(qn('w:sdt')):
+        sdtPr = sdt.find(qn('w:sdtPr'))
+        if sdtPr is None:
+            continue
+        tag = sdtPr.find(qn('w:tag'))
+        if tag is None:
+            continue
+        val = tag.get(qn('w:val'))
+        if val:
+            yield val
+
 def find_item_table(doc):
     for table in doc.tables:
-        # Check first row logic
-        if len(table.rows) > 0:
-            header_cells = table.rows[0].cells
-            for cell in header_cells:
-                text = cell.text.strip()
-                if "ItemName" in text or "品名" in text:
-                    return table
+        table_text = "\n".join(cell.text for row in table.rows for cell in row.cells)
+        tags = set(iter_sdt_tags(table._element))
+        if "品目" in table_text and {"ItemName", "Quantity"}.issubset(tags):
+            return table
+    return None
+
+def find_item_template_row(table):
+    for row in table.rows:
+        tags = set(iter_sdt_tags(row._element))
+        if {"QuoteNumber", "ItemName", "EstimatedAmount"}.issubset(tags):
+            return row
     return None
 
 # Helper to fill and FLATTEN SDT in a specific element
@@ -164,54 +203,46 @@ def process_word_template(doc, data, items):
     for p in doc.paragraphs:
         if orderer_key in p.text:
             p.text = p.text.replace(orderer_key, data.get("RequestorName", ""))
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    if orderer_key in p.text:
+                        p.text = p.text.replace(orderer_key, data.get("RequestorName", ""))
     
     # 3. Tables (Items)
     table = find_item_table(doc)
     if table:
         print("  Found Item Table.")
-        if len(table.rows) < 2:
-            print("  Error: Table has no template row")
+        template_row = find_item_template_row(table)
+        if template_row is None:
+            print("  Error: Item template row not found.")
             return
-            
-        template_row = table.rows[1]
-        subtotal = 0
-        
-        for item in items:
+
+        insert_index = list(table._element).index(template_row._element)
+        table._element.remove(template_row._element)
+
+        for offset, item in enumerate(items):
             # Calculate Data
             qty = item["Quantity"]
             price = item["UnitPrice"]
             amount = qty * price
-            subtotal += amount
             
             # Clone Row
             new_row_element = copy.deepcopy(template_row._element)
             
             row_data = {
+                "QuoteNumber": str(item.get("QuoteNumber", "")),
                 "ItemName": str(item["ItemName"]),
+                "Manufacturer": str(item.get("Manufacturer", "")),
                 "Quantity": str(qty),
-                "Unit": str(item["Unit"]),
-                "UnitPrice": f"{price:,}",
-                "Amount": f"{amount:,}"
+                "EstimatedAmount": f"{amount:,}",
             }
             
             # CRITICAL FIX: Flatten SDTs in the cloned row
             flatten_row_sdts(new_row_element, row_data)
             
-            table._element.append(new_row_element)
-        
-        # Remove template row
-        table._element.remove(template_row._element)
-        
-        # 4. Footer Totals
-        tax = math.floor(subtotal * 0.10)
-        total = subtotal + tax
-        
-        totals_data = {
-            "SubTotal": f"¥{subtotal:,}",
-            "Tax": f"¥{tax:,}",
-            "Total": f"¥{total:,}"
-        }
-        populate_word_sdts(doc, totals_data)
+            table._element.insert(insert_index + offset, new_row_element)
     else:
         print("  WARNING: Item table not found in Word.")
                             
@@ -232,58 +263,78 @@ def copy_row_style(ws, src_row_idx, dest_row_idx):
         new_cell.protection = copy.copy(cell.protection)
         new_cell.alignment = copy.copy(cell.alignment)
 
+def find_excel_layout(ws):
+    start_row = None
+    subtotal_row = None
+    for row in range(1, ws.max_row + 1):
+        if ws.cell(row=row, column=2).value == "{{ItemName}}":
+            start_row = row
+        if ws.cell(row=row, column=5).value == "小計":
+            subtotal_row = row
+            break
+    if start_row is None:
+        start_row = 10
+    if subtotal_row is None:
+        subtotal_row = ws.max_row + 1
+    data_end_row = subtotal_row - 1
+    return start_row, data_end_row, subtotal_row
+
 def process_excel_template(wb, data, items):
     ws = wb.active
-    
-    # 1. Header Data (Simple cell mapping assumption for demo)
-    # Adjust coordinates as per actual template if known. 
-    # For now, we assume named ranges or explicit cells? 
-    # Plan says "Row 10...". 
-    
-    # 2. Items
-    start_row = 10
-    
-    # Calculate Totals
-    subtotal = 0
-    
-    # We insert rows in reverse or just handle shifting.
-    # To append, we insert rows before the last "Total" line or just overwrite empty pre-formatted rows?
-    # Plan says: "10行目...をコピーして挿入" (Copy insert row 10).
-    
-    for i, item in enumerate(items):
-        current_row = start_row + i
-        
-        # If it's not the first item, we might need to insert a row to push down footer?
-        # Or if the template has only 1 row, we insert N-1 rows.
-        if i > 0:
-            ws.insert_rows(current_row)
-            copy_row_style(ws, start_row, current_row) # Copy from first data row
-            
-        # Set Values
-        qty = item["Quantity"]
-        price = item["UnitPrice"]
-        amount = qty * price
-        subtotal += amount
-        
-        # Column mapping (Arbitrary/Standard Assumption)
-        # A=No, B=ItemName, C=Qty, D=Unit, E=Price, F=Amount
-        ws.cell(row=current_row, column=1).value = i + 1
-        ws.cell(row=current_row, column=2).value = item["ItemName"]
-        ws.cell(row=current_row, column=3).value = qty
-        ws.cell(row=current_row, column=4).value = item["Unit"]
-        ws.cell(row=current_row, column=5).value = price
-        ws.cell(row=current_row, column=6).value = amount 
-    
-    # Totals (Assume they are below the list. If we inserted rows, they pushed down.)
-    # We might need to find where they are or assume fixed offset if no rows were inserted (but we did).
-    
-    pass
+
+    # Header fields
+    ws["B3"] = data.get("VendorName", ws["B3"].value)
+    ws["G5"] = data.get("OrderDate", ws["G5"].value)
+
+    start_row, data_end_row, subtotal_row = find_excel_layout(ws)
+    available_rows = data_end_row - start_row + 1
+
+    # Expand item area only when template rows are insufficient
+    if len(items) > available_rows:
+        extra = len(items) - available_rows
+        insert_at = data_end_row + 1
+        for _ in range(extra):
+            ws.insert_rows(insert_at)
+            copy_row_style(ws, start_row, insert_at)
+            data_end_row += 1
+            subtotal_row += 1
+
+    for row in range(start_row, data_end_row + 1):
+        idx = row - start_row
+        ws.cell(row=row, column=1).value = idx + 1
+        ws.cell(row=row, column=5).value = f'=IF(D{row}<>"",F{row}/D{row},"")'
+
+        if idx < len(items):
+            item = items[idx]
+            qty = item["Quantity"]
+            amount = qty * item["UnitPrice"]
+            ws.cell(row=row, column=2).value = item["ItemName"]
+            ws.cell(row=row, column=3).value = item.get("Manufacturer", "")
+            ws.cell(row=row, column=4).value = qty
+            ws.cell(row=row, column=6).value = amount
+            ws.cell(row=row, column=7).value = None
+            ws.cell(row=row, column=8).value = item.get("QuoteNumber", "")
+        else:
+            ws.cell(row=row, column=2).value = None
+            ws.cell(row=row, column=3).value = None
+            ws.cell(row=row, column=4).value = None
+            ws.cell(row=row, column=6).value = None
+            ws.cell(row=row, column=7).value = None
+            ws.cell(row=row, column=8).value = None
+
+    # Keep summary formulas aligned with the current data range
+    ws.cell(row=subtotal_row, column=6).value = f"=SUM(F{start_row}:F{data_end_row})"
+    ws.cell(row=subtotal_row + 1, column=6).value = f"=F{subtotal_row}*0.1"
+    ws.cell(row=subtotal_row + 2, column=6).value = f"=F{subtotal_row}+F{subtotal_row + 1}"
 
 # --- Main ---
 
 def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+
+    blank_quote_count = sum(1 for item in ITEMS if not str(item.get("QuoteNumber", "")).strip())
+    print(f"QuoteNumber blank count: {blank_quote_count}")
 
     # --- Process Word ---
     print(f"Processing Word Template: {word_template_path}")

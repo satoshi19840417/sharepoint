@@ -1,0 +1,66 @@
+{
+  "name": "30477973-b322-47d1-9459-fc247cb1c9c9",
+  "id": "/providers/Microsoft.Flow/flows/30477973-b322-47d1-9459-fc247cb1c9c9",
+  "type": "Microsoft.Flow/flows",
+  "properties": {
+    "apiId": "/providers/Microsoft.PowerApps/apis/shared_logicflows",
+    "displayName": "Send_OrderDocs_SP",
+    "definition": {
+      "metadata": {
+        "workflowEntityId": null,
+        "processAdvisorMetadata": null,
+        "flowChargedByPaygo": null,
+        "flowclientsuspensionreason": "None",
+        "flowclientsuspensiontime": null,
+        "flowclientsuspensionreasondetails": null,
+        "creator": {
+          "id": "26ee4d46-8985-4ee0-8d74-3ac4b2557c32",
+          "type": "User",
+          "tenantId": "1abfd9c3-fabb-4418-9124-a138dd0f9ae9"
+        },
+        "provisioningMethod": "FromDefinition",
+        "failureAlertSubscription": true,
+        "clientLastModifiedTime": "2026-02-06T06:15:03.7369591Z",
+        "connectionKeySavedTimeKey": "2026-02-06T06:15:03.7369591Z",
+        "creationSource": "Portal",
+        "modifiedSources": "Portal"
+      },
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "繰り返し": {
+          "recurrence": {
+            "interval": 1,
+            "frequency": "Minute"
+          },
+          "evaluatedRecurrence": {
+            "interval": 1,
+            "frequency": "Minute"
+          },
+          "type": "Recurrence"
+        }
+      },
+      "actions": {
+        "作成": {
+          "runAfter": {},
+          "type": "Compose",
+          "inputs": "init"
+        }
+      },
+      "outputs": {}
+    },
+    "connectionReferences": {},
+    "flowFailureAlertSubscribed": false,
+    "isManaged": false
+  }
+}

@@ -15,12 +15,11 @@ Content Control Names（SP内部名に対応）:
 """
 
 from docx import Document
-from docx.shared import Pt, Inches, Cm, Twips
+from docx.shared import Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.oxml.ns import qn, nsmap
+from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-import os
 
 def add_content_control(run, tag, alias=None):
     """
@@ -131,13 +130,13 @@ def create_order_template():
     doc.add_paragraph()  # スペース
     
     # 注文内容表
-    table = doc.add_table(rows=3, cols=5)
+    table = doc.add_table(rows=2, cols=6)
     table.style = 'Table Grid'
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
     
     # ヘッダー行
     header_cells = table.rows[0].cells
-    headers = ['件名', '品目', 'メーカー', '数量', '見積額']
+    headers = ['見積番号', '件名', '品目', 'メーカー', '数量', '見積額']
     for i, text in enumerate(headers):
         header_cells[i].text = text
         header_cells[i].paragraphs[0].runs[0].bold = True
@@ -146,38 +145,31 @@ def create_order_template():
     # データ行（Content Control）
     data_row = table.rows[1].cells
     
-    # Title
+    # QuoteNumber
     p = data_row[0].paragraphs[0]
+    add_content_control(p.add_run('《QuoteNumber》'), 'QuoteNumber', '見積書番号')
+    
+    # Title
+    p = data_row[1].paragraphs[0]
     add_content_control(p.add_run('《Title》'), 'Title', '件名')
     
     # ItemName
-    p = data_row[1].paragraphs[0]
+    p = data_row[2].paragraphs[0]
     add_content_control(p.add_run('《ItemName》'), 'ItemName', '品目')
     
     # Manufacturer
-    p = data_row[2].paragraphs[0]
+    p = data_row[3].paragraphs[0]
     add_content_control(p.add_run('《Manufacturer》'), 'Manufacturer', 'メーカー')
     
     # Quantity
-    p = data_row[3].paragraphs[0]
+    p = data_row[4].paragraphs[0]
     add_content_control(p.add_run('《Quantity》'), 'Quantity', '数量')
     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     
     # EstimatedAmount
-    p = data_row[4].paragraphs[0]
+    p = data_row[5].paragraphs[0]
     add_content_control(p.add_run('《EstimatedAmount》'), 'EstimatedAmount', '見積額')
     p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    
-    # 見積書番号行
-    quote_row = table.rows[2].cells
-    quote_row[0].text = '見積書番号'
-    quote_row[0].paragraphs[0].runs[0].bold = True
-    
-    # QuoteNumber（セル結合）
-    merged_cell = quote_row[1].merge(quote_row[4])
-    p = merged_cell.paragraphs[0]
-    p.clear()
-    add_content_control(p.add_run('《QuoteNumber》'), 'QuoteNumber', '見積書番号')
     
     doc.add_paragraph()  # スペース
     
@@ -197,12 +189,12 @@ def create_order_template():
     return doc
 
 if __name__ == '__main__':
-    output_path = r'c:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\Documents\02_Templates\発注書テンプレート.docx'
+    output_path = r'c:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\01_Documents\02_Templates\発注書テンプレート.docx'
     
     doc = create_order_template()
     doc.save(output_path)
     
-    print(f'✅ 発注書テンプレートを作成しました: {output_path}')
+    print(f'[OK] 発注書テンプレートを作成しました: {output_path}')
     print()
     print('Content Control一覧:')
     print('  - Title: 件名')
