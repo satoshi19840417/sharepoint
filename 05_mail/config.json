@@ -1,0 +1,15 @@
+{
+    "max_recipients": 50,
+    "send_interval_sec": 3,
+    "url_timeout_sec": 10,
+    "url_retry_count": 2,
+    "url_retry_interval_sec": 3,
+    "dry_run": true,
+    "test_mode": true,
+    "test_email": "",
+    "domain_whitelist": [],
+    "domain_blacklist": [],
+    "log_retention_days": 90,
+    "confirmation_threshold": 5,
+    "credential_target_name": "見積依頼スキル_暗号化鍵"
+}
