@@ -1,0 +1,738 @@
+[
+  {
+    "tc_id": "TC-01",
+    "status": "BLOCKED",
+    "expected": "CP932 CSV loads successfully without garble warning.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-02",
+    "status": "BLOCKED",
+    "expected": "UTF-8 BOM CSV loads successfully.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-03",
+    "status": "BLOCKED",
+    "expected": "Shift_JIS/CP932 CSV fallback load works.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-04",
+    "status": "BLOCKED",
+    "expected": "Unreadable mixed binary input should trigger decode warning/error handling.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-05",
+    "status": "BLOCKED",
+    "expected": "Garbled-character warning should be detected.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-06",
+    "status": "BLOCKED",
+    "expected": "Alias headers should map to standard columns.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-07",
+    "status": "BLOCKED",
+    "expected": "Header trim/case-insensitive alias normalization should work.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-08",
+    "status": "BLOCKED",
+    "expected": "Contact name priority #1 (担当者名) should be used.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-09",
+    "status": "BLOCKED",
+    "expected": "Contact name priority #2 (氏名) should be used.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-10",
+    "status": "BLOCKED",
+    "expected": "Contact name priority #3 (姓+名) should be used.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-11",
+    "status": "BLOCKED",
+    "expected": "Contact name priority #4 (姓のみ) should be used.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-12",
+    "status": "BLOCKED",
+    "expected": "Contact name fallback should be ご担当者様.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-13",
+    "status": "BLOCKED",
+    "expected": "Middle name should be inserted in 姓 ミドル 名 order.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-14",
+    "status": "BLOCKED",
+    "expected": "Invalid email format should be rejected.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-15",
+    "status": "BLOCKED",
+    "expected": "Missing required value should be row-level error.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-16",
+    "status": "BLOCKED",
+    "expected": "Duplicate addresses should be de-duplicated with warning.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-17",
+    "status": "BLOCKED",
+    "expected": "Blank rows should be skipped silently.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-18",
+    "status": "BLOCKED",
+    "expected": "Non-existent file should return file-not-found error.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-19",
+    "status": "BLOCKED",
+    "expected": "Product search should return proposal data for target item.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-20",
+    "status": "BLOCKED",
+    "expected": "All search outcomes should have source URL/site attribution.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-21",
+    "status": "BLOCKED",
+    "expected": "Selected product URL should pass validity check.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-22",
+    "status": "BLOCKED",
+    "expected": "Invalid URL should trigger warning path and alternative prompt.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-23",
+    "status": "BLOCKED",
+    "expected": "Flow should not proceed to mail generation before user approval.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-24",
+    "status": "BLOCKED",
+    "expected": "Rejection should route to re-search/manual correction.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-25",
+    "status": "BLOCKED",
+    "expected": "Blacklist match should reject even if whitelist matches.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-26",
+    "status": "BLOCKED",
+    "expected": "Empty whitelist should allow domain.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-27",
+    "status": "BLOCKED",
+    "expected": "Whitelist match should allow.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-28",
+    "status": "BLOCKED",
+    "expected": "Whitelist non-match should reject.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-29",
+    "status": "BLOCKED",
+    "expected": "Subdomain should match parent domain rule.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-30",
+    "status": "BLOCKED",
+    "expected": "Normal product query should pass PII check.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-31",
+    "status": "BLOCKED",
+    "expected": "Email in query should be blocked.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-32",
+    "status": "BLOCKED",
+    "expected": "Hyphenated phone should be blocked.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-33",
+    "status": "BLOCKED",
+    "expected": "Spaced phone should be blocked.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-34",
+    "status": "BLOCKED",
+    "expected": "Company-name match should be warning-only.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-35",
+    "status": "BLOCKED",
+    "expected": "Combined PII should block with warning context.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-36",
+    "status": "BLOCKED",
+    "expected": "HTTPS 2xx should be valid.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-37",
+    "status": "BLOCKED",
+    "expected": "3xx redirect should be accepted.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-38",
+    "status": "BLOCKED",
+    "expected": "HEAD=405 should fallback to GET and succeed when GET=200.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-39",
+    "status": "BLOCKED",
+    "expected": "Redirect depth over max(5) should be blocked.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-40",
+    "status": "BLOCKED",
+    "expected": "HTTP scheme should emit warning.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-41",
+    "status": "BLOCKED",
+    "expected": "Unsupported scheme should be rejected.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-42",
+    "status": "BLOCKED",
+    "expected": "localhost should be blocked.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-43",
+    "status": "BLOCKED",
+    "expected": "Private IP should be blocked.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-44",
+    "status": "BLOCKED",
+    "expected": "Domain resolving to private IP should be blocked.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-45",
+    "status": "BLOCKED",
+    "expected": "HTTP 404 should be treated as invalid.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-46",
+    "status": "BLOCKED",
+    "expected": "Timeout should retry up to configured count.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-47",
+    "status": "BLOCKED",
+    "expected": "DNS resolution failure should end as connection error after retries.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-48",
+    "status": "BLOCKED",
+    "expected": "DOCX template should load successfully.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-49",
+    "status": "BLOCKED",
+    "expected": "Variable bracket character behavior should match implementation.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-50",
+    "status": "BLOCKED",
+    "expected": "TXT template should load successfully.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-51",
+    "status": "BLOCKED",
+    "expected": "Default template should be available.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-52",
+    "status": "BLOCKED",
+    "expected": "Template variables should be replaced in both formats.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-53",
+    "status": "BLOCKED",
+    "expected": "create_email_body should inject product/company fields.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-54",
+    "status": "BLOCKED",
+    "expected": "Strict mode should fail when undefined variable exists.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-55",
+    "status": "BLOCKED",
+    "expected": "Missing template file should produce file-not-found error.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-56",
+    "status": "PASS",
+    "expected": "Outlook connection check should succeed.",
+    "actual": "Outlook接続OK",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-57",
+    "status": "BLOCKED",
+    "expected": "dry_run send should succeed with DRYRUN message-id.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-58",
+    "status": "PASS",
+    "expected": "Self-addressed test send should succeed.",
+    "actual": "message_id=<OSCPR01MB146945BD068CCEA12AAB54207C860A@OSCPR01MB14694.jpnprd01.prod.outlook.com>",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-59",
+    "status": "PASS",
+    "expected": "send_test_mail should prefix subject with [テスト].",
+    "actual": "subject=[テスト] 件名確認",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-60",
+    "status": "BLOCKED",
+    "expected": "Send interval control should enforce >= configured delay.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-61",
+    "status": "BLOCKED",
+    "expected": ">=5 recipients should trigger final confirmation behavior.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-62",
+    "status": "BLOCKED",
+    "expected": "Below threshold should not trigger warning behavior.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-63",
+    "status": "PASS",
+    "expected": "Successful send should obtain non-fallback Message-ID.",
+    "actual": "message_id=<OSCPR01MB146942FFF73DC768BAE9521AEC860A@OSCPR01MB14694.jpnprd01.prod.outlook.com>",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-64",
+    "status": "BLOCKED",
+    "expected": "Fallback Message-ID format should follow FALLBACK:{UUID}:{ts}:{hash}.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-65",
+    "status": "BLOCKED",
+    "expected": "Retryable send errors should retry up to max count.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-66",
+    "status": "BLOCKED",
+    "expected": "generate_key should create a key.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-67",
+    "status": "BLOCKED",
+    "expected": "get_key should retrieve generated key.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-68",
+    "status": "BLOCKED",
+    "expected": "encrypt should produce enc:v1: format.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-69",
+    "status": "BLOCKED",
+    "expected": "decrypt should return original plaintext.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-70",
+    "status": "BLOCKED",
+    "expected": "Operation without key should raise key-not-found error.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-71",
+    "status": "BLOCKED",
+    "expected": "Encrypted column format validator should detect mismatch.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-72",
+    "status": "BLOCKED",
+    "expected": "Overwrite without force should raise EncryptionError.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-73",
+    "status": "BLOCKED",
+    "expected": "Audit log file should be generated.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-74",
+    "status": "BLOCKED",
+    "expected": "Emails in audit details should be encrypted.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-75",
+    "status": "BLOCKED",
+    "expected": "Screen output should mask email addresses.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-76",
+    "status": "BLOCKED",
+    "expected": "Sent list CSV should be generated with encrypted mail column.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-77",
+    "status": "BLOCKED",
+    "expected": "Unsent list CSV should include failed rows and error details.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-78",
+    "status": "BLOCKED",
+    "expected": "Error logs should mask as ***@domain format.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-79",
+    "status": "BLOCKED",
+    "expected": "CSV missing required 会社名 column should error.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-80",
+    "status": "BLOCKED",
+    "expected": "Empty CSV should error.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-81",
+    "status": "BLOCKED",
+    "expected": "Encrypted-column mismatch should stop with detection error.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-82",
+    "status": "BLOCKED",
+    "expected": "Unsupported template extension (.pdf) should error.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-83",
+    "status": "BLOCKED",
+    "expected": "Outlook unavailable should return connection error and stop processing.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-84",
+    "status": "BLOCKED",
+    "expected": "Sending over max_recipients should fail before send.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-85",
+    "status": "BLOCKED",
+    "expected": "Partial failures should generate unsent list while keeping successes.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-86",
+    "status": "BLOCKED",
+    "expected": "Unsent-list rerun with *_enc should work (known implementation gap).",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-87",
+    "status": "BLOCKED",
+    "expected": "After key loss, decryption should fail and require new key setup.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-88",
+    "status": "BLOCKED",
+    "expected": "Decrypting with wrong key should raise DecryptionError.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-89",
+    "status": "BLOCKED",
+    "expected": "SSRF protection should block private IP URL.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-90",
+    "status": "BLOCKED",
+    "expected": "Second send to same address in same execution should be skipped.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-91",
+    "status": "BLOCKED",
+    "expected": "Re-execution within 24h with same payload should request confirmation.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  },
+  {
+    "tc_id": "TC-92",
+    "status": "BLOCKED",
+    "expected": "Message-ID should be recorded in send ledger artifacts.",
+    "actual": "Stage 'stage2' excludes this test case.",
+    "evidence": [],
+    "notes": "Not executed due to stage filter."
+  }
+]
