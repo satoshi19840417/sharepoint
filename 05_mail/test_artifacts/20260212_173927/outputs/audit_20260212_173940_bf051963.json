@@ -1,0 +1,55 @@
+{
+  "execution_id": "bf051963-d7eb-41f7-827b-e4b532ec566b",
+  "start_time": "2026-02-12T17:39:40.226917",
+  "end_time": "2026-02-12T17:39:40.254753",
+  "operator": "千賀聡志",
+  "input_file": "tc61.csv",
+  "total_count": 5,
+  "success_count": 5,
+  "failure_count": 0,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjZHM4uo1gFZVduYD2J0WHmqFmltI0dBpOqiTh6VzfGCPJynHW3y-qz9xKGg6u5ZHCGu7aJbRZiOItl0ZbeK_pYwKPBz909JdSe0Ob6JJCAAlaRI=",
+      "company_name": "Company1",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T17:39:40.227015"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjZHMrFFi_fBCE3PJNyTw-J01BZYnuL7sotevWEviyCAoNS3JkrKpPOe_vEYk5Ce6Y-rSmsJH2ubpkHJoIQ4-NtQzSKeO2ziV-t3RT8fMeJAK2Og=",
+      "company_name": "Company2",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T17:39:40.227015"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjZHMgX2edShRyMFPG8pmM557--GSXqrru_HT4l6SE3fbPmqp1riZ68DRn9UxzJlyv6gF-iXbe_1536EYSLxOwEj9ZGmmhtLpXlh9eHy--Z1YNf8=",
+      "company_name": "Company3",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T17:39:40.227015"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjZHMgByD03ljx-pCtQkIZanFRKrxD2GHHZjyObfDd-o7r057aRiiw_tsiF_CIC59PYxo9n3PgCghABvjv-XXVUfpB-0ZE_1-8qMy_Lh6KnOzQtY=",
+      "company_name": "Company4",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T17:39:40.227015"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjZHMIL_SfXi-P1bYIowcyfByGlJ-SRvp9U7UW9vnGOm5tRSNE3swhwFXrItmq9-uLlve3Ty_2czJlYaBjczz3T7jegKyoWYGjVV5LTSlx24PWKM=",
+      "company_name": "Company5",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T17:39:40.227015"
+    }
+  ],
+  "errors": [],
+  "product_info": {
+    "product_name": "P",
+    "maker_name": "",
+    "maker_code": "",
+    "quantity": "",
+    "product_url": "https://example.com"
+  }
+}

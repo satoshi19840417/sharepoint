@@ -1,0 +1,39 @@
+{
+  "execution_id": "4fe52dcd-99c0-47bf-8f1e-1b2dbe03fae6",
+  "start_time": "2026-02-12T17:39:40.369888",
+  "end_time": "2026-02-12T17:39:40.373347",
+  "operator": "千賀聡志",
+  "input_file": "tc85.csv",
+  "total_count": 2,
+  "success_count": 1,
+  "failure_count": 1,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjZHMjRlFamqW9MDg87_d3Rbiff8hgFaadGzUMgBHqC6C-QQ8781AOWqhP6655rLDU_Dx-pIZCZpWg2HEX-7DK7kk2guE2ZBb9z22q6s-DOxdZ_k=",
+      "company_name": "Company1",
+      "success": true,
+      "message_id": "MID-SUCCESS",
+      "sent_at": "2026-02-12T17:39:40.369905"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjZHMBWCBeZYIiVNblARp0GFc9-cMO4dGOS2dcPSTdGoNFwoM3EIvsW7EG5N31HzrcWkHaZe2nB0_mgE7Brw29m-Zoy6bPQsmT5R2SdlFKwbjGGs=",
+      "company_name": "Company2",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    }
+  ],
+  "errors": [
+    {
+      "email_masked": "***@example.com",
+      "error": "Invalid address"
+    }
+  ],
+  "product_info": {
+    "product_name": "P",
+    "maker_name": "",
+    "maker_code": "",
+    "quantity": "",
+    "product_url": "https://example.com"
+  }
+}
