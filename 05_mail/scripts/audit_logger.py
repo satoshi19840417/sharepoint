@@ -60,7 +60,8 @@ class AuditLogger:
     def write_audit_log(
         self,
         input_file: str,
-        results: List[Dict[str, Any]]
+        results: List[Dict[str, Any]],
+        product_info: Optional[Dict[str, str]] = None,
     ) -> str:
         """
         監査ログを書き込む。
@@ -68,6 +69,7 @@ class AuditLogger:
         Args:
             input_file: 入力ファイル名
             results: 送信結果リスト
+            product_info: 製品情報（任意）
 
         Returns:
             ログファイルパス
@@ -120,8 +122,12 @@ class AuditLogger:
         timestamp = self.start_time.strftime("%Y%m%d_%H%M%S")
         log_file = self.log_dir / f"audit_{timestamp}_{self.execution_id[:8]}.json"
 
+        entry_dict = asdict(entry)
+        if product_info:
+            entry_dict["product_info"] = product_info
+
         with open(log_file, 'w', encoding='utf-8') as f:
-            json.dump(asdict(entry), f, ensure_ascii=False, indent=2)
+            json.dump(entry_dict, f, ensure_ascii=False, indent=2)
 
         return str(log_file)
 

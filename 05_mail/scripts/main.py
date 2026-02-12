@@ -182,7 +182,10 @@ class QuoteRequestSkill:
         record: ContactRecord,
         product_name: str,
         product_features: str,
-        product_url: str
+        product_url: str,
+        maker_name: str = "",
+        maker_code: str = "",
+        quantity: str = "",
     ) -> str:
         """
         メール本文をレンダリングする。
@@ -194,6 +197,9 @@ class QuoteRequestSkill:
             product_name=product_name,
             product_features=product_features,
             product_url=product_url,
+            maker_name=maker_name,
+            maker_code=maker_code,
+            quantity=quantity,
         )
         return result.content
 
@@ -244,6 +250,9 @@ class QuoteRequestSkill:
         product_name: str,
         product_features: str,
         product_url: str,
+        maker_name: str = "",
+        maker_code: str = "",
+        quantity: str = "",
         input_file: str = "",
         confirm_rerun_callback: Optional[Callable[[ContactRecord, Dict[str, Any]], bool]] = None,
     ) -> Dict[str, Any]:
@@ -283,6 +292,9 @@ class QuoteRequestSkill:
                 product_name=product_name,
                 product_features=product_features,
                 product_url=product_url,
+                maker_name=maker_name,
+                maker_code=maker_code,
+                quantity=quantity,
             )
             dedupe_key = self._build_dedupe_key(record.email, subject, template_content)
 
@@ -394,7 +406,20 @@ class QuoteRequestSkill:
                 )
 
         # 監査ログ出力
-        audit_log_path = self.audit_logger.write_audit_log(input_file, results)
+        product_info = None
+        if product_name or maker_name or maker_code or quantity or product_url:
+            product_info = {
+                "product_name": product_name,
+                "maker_name": maker_name,
+                "maker_code": maker_code,
+                "quantity": quantity,
+                "product_url": product_url,
+            }
+        audit_log_path = self.audit_logger.write_audit_log(
+            input_file,
+            results,
+            product_info=product_info,
+        )
 
         # 送信済み/未送信リスト出力
         sent_list_path = self.audit_logger.write_sent_list(results)

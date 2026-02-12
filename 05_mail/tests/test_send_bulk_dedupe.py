@@ -20,7 +20,7 @@ class _AuditStub:
     def __init__(self) -> None:
         self.execution_id = "test-run"
 
-    def write_audit_log(self, input_file, results):
+    def write_audit_log(self, input_file, results, product_info=None):
         return "audit.json"
 
     def write_sent_list(self, results):

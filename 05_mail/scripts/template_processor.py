@@ -35,8 +35,8 @@ class TemplateResult:
 class TemplateProcessor:
     """テンプレート処理クラス"""
 
-    # Word形式の差し込み変数パターン（«変数名»）
-    WORD_VARIABLE_PATTERN = re.compile(r'«([^»]+)»')
+    # Word形式の差し込み変数パターン（≪変数名≫ / «変数名»）
+    WORD_VARIABLE_PATTERN = re.compile(r'[≪«]([^≫»]+)[≫»]')
 
     # 汎用形式の差し込み変数パターン（{{変数名}}）
     GENERIC_VARIABLE_PATTERN = re.compile(r'\{\{([^}]+)\}\}')
@@ -163,6 +163,7 @@ class TemplateProcessor:
 
         # 変数置換（Word形式）
         for var_name, value in variables.items():
+            content = content.replace(f"≪{var_name}≫", value)
             content = content.replace(f"«{var_name}»", value)
 
         # 変数置換（汎用形式）
@@ -183,6 +184,9 @@ class TemplateProcessor:
         product_name: str,
         product_features: str,
         product_url: str,
+        maker_name: str = "",
+        maker_code: str = "",
+        quantity: str = "",
         **extra_variables
     ) -> TemplateResult:
         """
@@ -195,6 +199,9 @@ class TemplateProcessor:
             product_name: 製品名
             product_features: 製品特徴
             product_url: 製品URL
+            maker_name: メーカー名
+            maker_code: メーカーコード
+            quantity: 数量
             **extra_variables: 追加の変数
 
         Returns:
@@ -206,6 +213,9 @@ class TemplateProcessor:
             "製品名": product_name,
             "製品特徴": product_features,
             "製品URL": product_url,
+            "メーカー名": maker_name,
+            "メーカーコード": maker_code,
+            "数量": quantity,
             # 一般的なエイリアス
             "姓": contact_name.split()[0] if " " in contact_name else contact_name,
         }
@@ -216,17 +226,20 @@ class TemplateProcessor:
 
 def get_default_template() -> str:
     """デフォルトのメールテンプレートを返す"""
-    return """«会社名»
-«担当者名» 様
+    return """≪会社名≫
+≪担当者名≫ 様
 
 お世話になっております。
 
 下記製品のお見積りをお願いしたく、ご連絡いたしました。
 
 ■ 製品情報
-製品名: «製品名»
-特徴: «製品特徴»
-製品ページ: «製品URL»
+製品名: ≪製品名≫
+メーカー名: ≪メーカー名≫
+メーカーコード: ≪メーカーコード≫
+数量: ≪数量≫
+特徴: ≪製品特徴≫
+製品ページ: ≪製品URL≫
 
 ご検討のほど、よろしくお願いいたします。
 """
