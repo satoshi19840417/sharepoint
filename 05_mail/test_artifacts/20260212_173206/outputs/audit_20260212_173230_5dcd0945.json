@@ -1,0 +1,39 @@
+{
+  "execution_id": "5dcd0945-d97e-45a8-aa4e-3b9920c5178d",
+  "start_time": "2026-02-12T17:32:30.086783",
+  "end_time": "2026-02-12T17:32:30.095736",
+  "operator": "千賀聡志",
+  "input_file": "tc91_second.csv",
+  "total_count": 1,
+  "success_count": 0,
+  "failure_count": 1,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjZAesNoIn6wJ_uyUB8Uro8D-0L3TKLA1Nj3yY4-PhrpYwCJftmg0LRCrTZQvrVf2DVvJxkQR12S097_vhzhrTJ311A==",
+      "company_name": "A社",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    }
+  ],
+  "errors": [
+    {
+      "email_masked": "***@example.com",
+      "error": {
+        "confirmation_required": true,
+        "previous_send": {
+          "timestamp": "2026-02-12T17:32:30.086819+00:00",
+          "message_id": "MID-91",
+          "run_id": "5dcd0945-d97e-45a8-aa4e-3b9920c5178d"
+        }
+      }
+    }
+  ],
+  "product_info": {
+    "product_name": "P",
+    "maker_name": "",
+    "maker_code": "",
+    "quantity": "",
+    "product_url": "https://example.com"
+  }
+}

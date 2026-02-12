@@ -958,11 +958,15 @@ class TCSuiteRunner:
         )
 
         def tc49() -> Dict[str, Any]:
-            supported = tp.extract_variables("«会社名»")
-            unsupported = tp.extract_variables("≪会社名≫")
-            if "会社名" in supported and "会社名" not in unsupported:
-                return self.pass_result(actual=f"supported={supported}, unsupported={unsupported}")
-            return self.fail_result(actual=f"supported={supported}, unsupported={unsupported}")
+            supported_double = tp.extract_variables("≪会社名≫")
+            supported_angle = tp.extract_variables("«会社名»")
+            if "会社名" in supported_double and "会社名" in supported_angle:
+                return self.pass_result(
+                    actual=f"supported_double={supported_double}, supported_angle={supported_angle}"
+                )
+            return self.fail_result(
+                actual=f"supported_double={supported_double}, supported_angle={supported_angle}"
+            )
 
         self.run_case(
             "TC-49",
@@ -983,7 +987,7 @@ class TCSuiteRunner:
             "TC-51",
             "Default template should be available.",
             lambda: self.pass_result(actual="default template loaded")
-            if "«会社名»" in get_default_template()
+            if ("≪会社名≫" in get_default_template() or "«会社名»" in get_default_template())
             else self.fail_result(actual="Default template does not include expected placeholder."),
         )
 
