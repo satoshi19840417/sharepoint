@@ -1,0 +1,275 @@
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "--------------------------------------------------------" -ForegroundColor Cyan
+--------------------------------------------------------
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "Phase 5: Add Sending Flow Columns" -ForegroundColor Cyan
+Phase 5: Add Sending Flow Columns
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "Target: $ListName" -ForegroundColor Cyan
+Target: 発注依頼_Requests_Test
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "--------------------------------------------------------"
+--------------------------------------------------------
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host ""
+
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> $Connected = $false
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 1. Try Interactive (Best for external windows)
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> if (-not $Connected) {
+>>     if (Try-Connect "Interactive") { $Connected = $true }
+>> }
+Attempting login via [Interactive]... WARNING: 
+ Please specify a valid client id for an Entra ID App Registration.                                                                     
+
+
+FAILED
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 2. Try DeviceLogin (Default App)
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> if (-not $Connected) {
+>>     Write-Host ""
+>>     Write-Host "Falling back to Device Login..." -ForegroundColor Cyan
+>>     Write-Host "To login: Open https://microsoft.com/devicelogin and enter the code shown below." -ForegroundColor White
+>>     if (Try-Connect "DeviceLogin_Default") { $Connected = $true }
+>> }
+
+Falling back to Device Login...
+To login: Open https://microsoft.com/devicelogin and enter the code shown below.
+Attempting login via [DeviceLogin_Default]...
+   (Look for code below)
+WARNING: The WriteObject and WriteError methods cannot be called from outside the overrides of the BeginProcessing, ProcessRecord, and EndProcessing methods, and they can only be called from within the same thread. Validate that the cmdlet makes these calls correctly, or contact Microsoft Customer Support Services.
+FAILED
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 3. Try DeviceLogin (PnP App)
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> if (-not $Connected) {
+>>     Write-Host ""
+>>     Write-Host "Falling back to Device Login (PnP ID)..." -ForegroundColor Cyan
+>>     Write-Host "To login: Open https://microsoft.com/devicelogin and enter the code shown below." -ForegroundColor White
+>>     if (Try-Connect "DeviceLogin_PnP") { $Connected = $true }
+>> }
+
+Falling back to Device Login (PnP ID)...
+To login: Open https://microsoft.com/devicelogin and enter the code shown below.
+Attempting login via [DeviceLogin_PnP]...
+   (Look for code below)
+WARNING: Default authentication request failed. Please specify the -Tenant parameter with either the tenant id or hostname to authenticate.
+FAILED
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> if (-not $Connected) {
+>>     Write-Error "All login methods failed. Aborting."
+>>     Read-Host "Press Enter to exit..."
+>>     exit
+>> }
+Write-Error: 
+Line |
+   2 |      Write-Error "All login methods failed. Aborting."
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | All login methods failed. Aborting.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host ""
+
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "Connected successfully!" -ForegroundColor Green
+
+Connected successfully!
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # --- VERIFY LIST EXISTS ---
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> $List = Get-PnPList -Identity $ListName -ErrorAction SilentlyContinue
+Get-PnPList: You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> if (-not $List) {
+>>     Write-Error "List '$ListName' not found. Aborting."
+>>     Read-Host "Press Enter to exit..."
+>>     exit
+>> }
+Write-Error: 
+Line |
+   2 |      Write-Error "List '$ListName' not found. Aborting."
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | List '発注依頼_Requests_Test' not found. Aborting.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "List '$ListName' found (ID: $($List.Id))." -ForegroundColor Green
+List '発注依頼_Requests_Test' found (ID: ).
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host ""
+
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # --- HELPER FUNCTIONS ---
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> function Add-TextField ($InternalName, $DisplayName, $Required = $false) {
+>>     Write-Host "Processing field: $DisplayName ($InternalName)"
+>>     Add-PnPField -List $ListName -DisplayName $DisplayName -InternalName $InternalName -Type Text -AddToDefaultView -ErrorAction SilentlyContinue | Out-Null
+>>     if ($Required) {
+>>         Set-PnPField -List $ListName -Identity $InternalName -Values @{Required = $true } | Out-Null
+>>     }
+>> }
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> function Add-NumberField ($InternalName, $DisplayName, $Required = $false) {
+>>     Write-Host "Processing field: $DisplayName ($InternalName)"
+>>     Add-PnPField -List $ListName -DisplayName $DisplayName -InternalName $InternalName -Type Number -AddToDefaultView -ErrorAction SilentlyContinue | Out-Null
+>>     if ($Required) {
+>>         Set-PnPField -List $ListName -Identity $InternalName -Values @{Required = $true } | Out-Null
+>>     }
+>> }
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # --- ADD PHASE 5 COLUMNS ---
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "Adding Phase 5 columns..." -ForegroundColor Cyan
+Adding Phase 5 columns...
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host ""
+
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 1. OrderID (発注ID) - Text, Required - Grouping key
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Add-TextField -InternalName "OrderID" -DisplayName "発注ID"
+ -Required $true
+Processing field: 発注ID (OrderID)
+Add-PnPField: 
+Line |
+   3 |      Add-PnPField -List $ListName -DisplayName $DisplayName -InternalN …
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 2. DeliveryAddress (納品先) - Text
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Add-TextField -InternalName "DeliveryAddress" -DisplayName "納品先"
+Processing field: 納品先 (DeliveryAddress)
+Add-PnPField: 
+Line |
+   3 |      Add-PnPField -List $ListName -DisplayName $DisplayName -InternalN …
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 3. VendorID (業者ID) - Text
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Add-TextField -InternalName "VendorID" -DisplayName "業者ID"
+Processing field: 業者ID (VendorID)
+Add-PnPField: 
+Line |
+   3 |      Add-PnPField -List $ListName -DisplayName $DisplayName -InternalN …
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 4. QuoteNumber (見積書番号) - Text
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Add-TextField -InternalName "QuoteNumber" -DisplayName "見 積書番号"
+Processing field: 見積書番号 (QuoteNumber)
+Add-PnPField: 
+Line |
+   3 |      Add-PnPField -List $ListName -DisplayName $DisplayName -InternalN …
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 5. SortOrder (表示順) - Number
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Add-NumberField -InternalName "SortOrder" -DisplayName "表 示順"
+Processing field: 表示順 (SortOrder)
+Add-PnPField: 
+Line |
+   3 |      Add-PnPField -List $ListName -DisplayName $DisplayName -InternalN …
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 6. SendStatus (送付ステータス) - Choice
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "Checking for existing SendStatus field..."
+Checking for existing SendStatus field...
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> $ExistingSendStatus = Get-PnPField -List $ListName -Identity "SendStatus" -ErrorAction SilentlyContinue
+Get-PnPField: You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> if ($ExistingSendStatus) {
+>>     Write-Warning "SendStatus already exists (Type: $($ExistingSendStatus.TypeAsString)). Skipping creation."
+>> } else {
+>>     Write-Host "Processing field: 送付ステータス (SendStatus)"
+>>     $SendStatusXml = "<Field Type='Choice' DisplayName='送付ステータス' Name='SendStatus' StaticName='SendStatus' Group='Phase5'><Default>未送付</Default><CHOICES><CHOICE>未送付</CHOICE><CHOICE>送付中</CHOICE><CHOICE>送付済</CHOICE><CHOICE>エラー</CHOICE></CHOICES></Field>"
+>>     Add-PnPFieldFromXml -List $ListName -FieldXml $SendStatusXml -ErrorAction SilentlyContinue | Out-Null
+>> }
+Processing field: 送付ステータス (SendStatus)
+Add-PnPFieldFromXml: 
+Line |
+   6 |      Add-PnPFieldFromXml -List $ListName -FieldXml $SendStatusXml -Err …
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # 7. ErrorLog (エラーログ) - Note (multiline text)
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "Processing field: エラーログ (ErrorLog)"
+Processing field: エラーログ (ErrorLog)
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Add-PnPField -List $ListName -DisplayName "エラーログ" -InternalName "ErrorLog" -Type Note -AddToDefaultView -ErrorAction SilentlyContinue | Out-Null
+Add-PnPField: You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> # --- VERIFICATION ---
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host ""
+
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "========================================" -ForegroundColor Cyan
+========================================
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "Verifying all Phase 5 columns..." -ForegroundColor Cyan
+Verifying all Phase 5 columns...
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "========================================" -ForegroundColor Cyan
+========================================
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> $RequiredFields = @("OrderID", "DeliveryAddress", "VendorID", "QuoteNumber", "SortOrder", "SendStatus", "ErrorLog")
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> $AllGood = $true
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> foreach ($FieldName in $RequiredFields) {
+>>     $F = Get-PnPField -List $ListName -Identity $FieldName -ErrorAction SilentlyContinue
+>>     if ($F) {
+>>         Write-Host "  [OK] $FieldName ($($F.Title)) - $($F.TypeAsString)" -ForegroundColor Green
+>>     } else {
+>>         Write-Host "  [MISSING] $FieldName" -ForegroundColor Red
+>>         $AllGood = $false
+>>     }
+>> }
+Get-PnPField: 
+Line |
+   2 |      $F = Get-PnPField -List $ListName -Identity $FieldName -ErrorActi …
+     |           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | You are not signed in. Please use Connect-PnPOnline to connect.
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> 
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host ""
+
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> if ($AllGood) {
+>>     Write-Host "All Phase 5 columns verified successfully!" -ForegroundColor Green
+>> } else {
+>>     Write-Warning "Some columns are missing. Please check the errors above."
+>> }
+All Phase 5 columns verified successfully!
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化>
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host ""
+
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "Press Enter to finish..."
+Press Enter to finish...
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Read-Host
+^A
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化>
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host ""
+
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Write-Host "Press Enter to finish..."
+Press Enter to finish...
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化> Read-Host
+^A
+PS C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化>

@@ -33,6 +33,7 @@ Import-Module PnP.PowerShell -ErrorAction Stop
 $SiteUrl = "https://cellgentech.sharepoint.com/sites/SP__Prototype"
 $ListName = "発注依頼_Requests_Test"
 $PnPClientId = "31359c7f-bd7e-475c-86db-fdb8c937548e"
+$TenantId = "1abfd9c3-fabb-4418-9124-a138dd0f9ae9"
 
 # --- FUNCTION: TRY CONNECT ---
 function Try-Connect {
@@ -41,20 +42,21 @@ function Try-Connect {
     Write-Host "Attempting login via [$Method]... " -NoNewline -ForegroundColor Yellow
     try {
         if ($Method -eq "Interactive") {
-            Connect-PnPOnline -Url $SiteUrl -Interactive -ErrorAction Stop
+            Connect-PnPOnline -Url $SiteUrl -Interactive -ClientId $PnPClientId -Tenant $TenantId -ErrorAction Stop
         }
         elseif ($Method -eq "DeviceLogin_Default") {
             Write-Host "`n   (Look for code below)" -ForegroundColor Gray
-            Connect-PnPOnline -Url $SiteUrl -DeviceLogin -ErrorAction Stop
+            Connect-PnPOnline -Url $SiteUrl -DeviceLogin -ClientId $PnPClientId -Tenant $TenantId -ErrorAction Stop
         }
         elseif ($Method -eq "DeviceLogin_PnP") {
             Write-Host "`n   (Look for code below)" -ForegroundColor Gray
-            Connect-PnPOnline -Url $SiteUrl -DeviceLogin -ClientId $PnPClientId -ErrorAction Stop
+            Connect-PnPOnline -Url $SiteUrl -DeviceLogin -ClientId $PnPClientId -Tenant $TenantId -ErrorAction Stop
         }
         return $true
     }
     catch {
         Write-Host "FAILED" -ForegroundColor Red
+        Write-Host "  $($_.Exception.Message)" -ForegroundColor DarkRed
         return $false
     }
 }
