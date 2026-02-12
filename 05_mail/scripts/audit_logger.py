@@ -13,6 +13,7 @@ import csv
 import datetime
 import uuid
 import getpass
+import re
 from pathlib import Path
 from typing import List, Dict, Optional, Any
 from dataclasses import dataclass, asdict
@@ -93,9 +94,12 @@ class AuditLogger:
         errors = []
         for result in results:
             if not result.get("success"):
+                error_payload = result.get("error_details")
+                if error_payload in (None, ""):
+                    error_payload = result.get("error", "")
                 errors.append({
-                    "email_masked": self.mask_email(result.get("email", "")),
-                    "error": result.get("error", ""),
+                    "email_masked": self.mask_email_domain_only(result.get("email", "")),
+                    "error": self._mask_error_details(error_payload),
                 })
 
         # ログエントリ作成
@@ -207,6 +211,29 @@ class AuditLogger:
         except Exception:
             # 鍵がない場合等はマスク表示
             return self.mask_email(value) if "@" in value else "***"
+
+    def _mask_error_details(self, value: Any) -> Any:
+        """エラー詳細内のメールアドレスを ***@domain 形式でマスクする。"""
+        if isinstance(value, dict):
+            return {k: self._mask_error_details(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [self._mask_error_details(v) for v in value]
+        if isinstance(value, str):
+            return self._mask_emails_in_text(value)
+        return value
+
+    def _mask_emails_in_text(self, text: str) -> str:
+        """文字列内に含まれるメールアドレスをマスクする。"""
+        if not text:
+            return text
+
+        email_pattern = re.compile(
+            r'([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})'
+        )
+        return email_pattern.sub(
+            lambda m: self.mask_email_domain_only(m.group(1)),
+            text,
+        )
 
     @staticmethod
     def mask_email(email: str) -> str:

@@ -10,6 +10,7 @@ mail_sender.py - Outlookメール送信モジュール
 """
 
 import datetime
+import re
 import time
 import uuid
 import hashlib
@@ -34,6 +35,7 @@ class SendResult:
     message_id: str = ""
     error: str = ""
     is_fallback_id: bool = False
+    message_id_source: str = ""
     sent_at: datetime.datetime = None
 
 
@@ -53,6 +55,12 @@ class OutlookMailSender:
 
     # Message-ID取得用MAPIプロパティ
     MESSAGE_ID_PROPERTY = "http://schemas.microsoft.com/mapi/proptag/0x1035001F"
+    MESSAGE_HEADER_PROPERTY = "http://schemas.microsoft.com/mapi/proptag/0x007D001F"
+    SENT_FOLDER_ID = 5  # olFolderSentMail
+    SENT_TIME_WINDOW_SEC = 180
+    DIRECT_MESSAGE_ID_POLL_INTERVAL_SEC = 0.5
+    DIRECT_MESSAGE_ID_POLL_TIMEOUT_SEC = 5.0
+    MAX_SENT_ITEMS_SCAN = 200
 
     def __init__(
         self,

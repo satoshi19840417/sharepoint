@@ -95,7 +95,7 @@ class URLValidator:
             return result
 
         # HTTP検証
-        return self._perform_request(url)
+        return self._perform_request(url, warning=result.warning)
 
     def _check_scheme(self, url: str) -> Tuple[Optional[bool], str]:
         """
@@ -148,11 +148,11 @@ class URLValidator:
 
         return True, ""
 
-    def _perform_request(self, url: str) -> URLValidationResult:
+    def _perform_request(self, url: str, warning: str = "") -> URLValidationResult:
         """
         HTTP(S)リクエストを実行して有効性を確認する。
         """
-        result = URLValidationResult(valid=False, url=url)
+        result = URLValidationResult(valid=False, url=url, warning=warning)
         headers = {"User-Agent": self.DEFAULT_USER_AGENT}
 
         for attempt in range(self.retry_count + 1):
@@ -180,6 +180,14 @@ class URLValidator:
 
                 result.status_code = response.status_code
                 result.final_url = response.url
+
+                redirect_count = len(getattr(response, "history", []) or [])
+                if redirect_count > self.max_redirects:
+                    result.error = (
+                        f"リダイレクト回数が上限を超えています: "
+                        f"{redirect_count} > {self.max_redirects}"
+                    )
+                    return result
 
                 # 2xx/3xxは成功
                 if 200 <= response.status_code < 400:
