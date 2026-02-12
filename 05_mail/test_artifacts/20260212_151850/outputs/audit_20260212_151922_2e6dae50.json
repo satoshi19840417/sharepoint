@@ -1,0 +1,43 @@
+{
+  "execution_id": "2e6dae50-4d3d-48e2-8f78-c1a8ab2ae442",
+  "start_time": "2026-02-12T15:19:22.238873",
+  "end_time": "2026-02-12T15:19:22.239368",
+  "operator": "千賀聡志",
+  "input_file": "tc90.csv",
+  "total_count": 2,
+  "success_count": 0,
+  "failure_count": 2,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDqAxK0RuUED5pikzBVWEuXMsD5FYEWV9_83QG6fSkZ8N1Gf5XdmPXKvT3EodT57QyW_YYle2Ym_Ko0X35UX8cvuw==",
+      "company_name": "Company1",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDq9_fyBVMJIjsagecLqeq23Xv8OTE4ZFp9JHL3XoZcwRTTDwIruQ-Y2-YnL-DO-6GpoHiOd8cNXyVkfU4RnwLKyg==",
+      "company_name": "Company2",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    }
+  ],
+  "errors": [
+    {
+      "email_masked": "***@example.com",
+      "error": {
+        "confirmation_required": true,
+        "previous_send": {
+          "timestamp": "2026-02-12T15:19:06.429657+00:00",
+          "message_id": "MID-DUP",
+          "run_id": "aaf216d8-acb6-4b2e-82fe-2fa1667a17e0"
+        }
+      }
+    },
+    {
+      "email_masked": "***@example.com",
+      "error": "同一実行内の重複送信をスキップしました: ***@example.com"
+    }
+  ]
+}

@@ -137,6 +137,7 @@ class OutlookMailSender:
         if self.dry_run:
             result.success = True
             result.message_id = f"DRYRUN:{uuid.uuid4()}"
+            result.message_id_source = "dry_run"
             result.sent_at = datetime.datetime.now()
             return result
 
@@ -162,8 +163,8 @@ class OutlookMailSender:
                 self._last_send_time = datetime.datetime.now()
 
                 # Message-ID取得
-                time.sleep(2)  # Outlook処理待機
-                message_id, is_fallback = self._get_message_id(
+                message_id, is_fallback, message_id_source = self._get_message_id_with_source(
+                    mail,
                     subject_before_send,
                     recipient_before_send,
                     sent_time_approx
@@ -172,6 +173,7 @@ class OutlookMailSender:
                 result.success = True
                 result.message_id = message_id
                 result.is_fallback_id = is_fallback
+                result.message_id_source = message_id_source
                 result.sent_at = sent_time_approx
                 return result
 
@@ -204,59 +206,198 @@ class OutlookMailSender:
         sent_time_approx: datetime.datetime
     ) -> Tuple[str, bool]:
         """
-        送信済みフォルダからMessage-IDを取得する。
+        互換性維持用: Message-IDとfallback判定のみを返す。
+        """
+        message_id, is_fallback, _ = self._get_message_id_with_source(
+            None,
+            subject,
+            recipient,
+            sent_time_approx,
+        )
+        return message_id, is_fallback
 
-        要件定義書: Subject + SentOn(±60秒) + To で照合
+    def _get_message_id_with_source(
+        self,
+        mail_item,
+        subject: str,
+        recipient: str,
+        sent_time_approx: datetime.datetime
+    ) -> Tuple[str, bool, str]:
+        """
+        Message-IDを取得する。
+        優先順位:
+        1. 送信直後のMailItemから直接取得（ポーリング）
+        2. 送信済みフォルダ再検索（Subject + SentOn(±180秒) + To）
+        3. fallback ID生成
 
         Returns:
-            (message_id, is_fallback)
+            (message_id, is_fallback, source)
         """
+        direct_message_id = self._poll_message_id_from_mail_item(
+            mail_item=mail_item,
+            timeout_sec=self.DIRECT_MESSAGE_ID_POLL_TIMEOUT_SEC,
+            interval_sec=self.DIRECT_MESSAGE_ID_POLL_INTERVAL_SEC,
+        )
+        if direct_message_id:
+            return direct_message_id, False, "direct"
+
+        sent_items_message_id = self._get_message_id_from_sent_items(
+            subject=subject,
+            recipient=recipient,
+            sent_time_approx=sent_time_approx,
+            time_window_sec=self.SENT_TIME_WINDOW_SEC,
+        )
+        if sent_items_message_id:
+            return sent_items_message_id, False, "sent_items"
+
+        fallback_id = self._generate_fallback_id(subject, sent_time_approx)
+        return fallback_id, True, "fallback"
+
+    def _poll_message_id_from_mail_item(
+        self,
+        mail_item,
+        timeout_sec: float,
+        interval_sec: float,
+    ) -> str:
+        """送信直後のMailItemからMessage-IDをポーリング取得する。"""
+        if mail_item is None:
+            return ""
+
+        deadline = time.time() + timeout_sec
+        while time.time() < deadline:
+            message_id = self._extract_message_id_from_item(mail_item)
+            if message_id:
+                return message_id
+            time.sleep(interval_sec)
+        return ""
+
+    def _get_message_id_from_sent_items(
+        self,
+        subject: str,
+        recipient: str,
+        sent_time_approx: datetime.datetime,
+        time_window_sec: int = 180,
+    ) -> str:
+        """送信済みフォルダからMessage-IDを再検索する。"""
+        recipient_expected = self._normalize_recipients(recipient)
         for attempt in range(self.message_id_retry_count):
             try:
                 outlook = self._get_outlook()
                 namespace = outlook.GetNamespace("MAPI")
-                sent_folder = namespace.GetDefaultFolder(5)  # 5 = olFolderSentMail
+                sent_folder = namespace.GetDefaultFolder(self.SENT_FOLDER_ID)
                 items = sent_folder.Items
                 items.Sort("[SentOn]", True)  # 降順
 
+                scanned = 0
+                min_allowed_time = sent_time_approx - datetime.timedelta(seconds=time_window_sec)
+                max_allowed_time = sent_time_approx + datetime.timedelta(seconds=time_window_sec)
+
                 for item in items:
+                    scanned += 1
+                    if scanned > self.MAX_SENT_ITEMS_SCAN:
+                        break
+
                     try:
-                        # Subject一致
-                        if item.Subject != subject:
+                        item_subject = str(getattr(item, "Subject", "")).strip()
+                        if item_subject != str(subject).strip():
                             continue
 
-                        # SentOn一致（±60秒以内）
-                        item_sent_on = item.SentOn
-                        if isinstance(item_sent_on, datetime.datetime):
-                            time_diff = abs((item_sent_on - sent_time_approx).total_seconds())
-                            if time_diff > 60:
-                                continue
-                        else:
+                        item_sent_on = getattr(item, "SentOn", None)
+                        if not isinstance(item_sent_on, datetime.datetime):
                             continue
 
-                        # To一致
-                        if item.To != recipient:
+                        if item_sent_on < min_allowed_time:
+                            break
+                        if item_sent_on > max_allowed_time:
                             continue
 
-                        # Message-ID取得
-                        message_id = item.PropertyAccessor.GetProperty(
-                            self.MESSAGE_ID_PROPERTY
-                        )
+                        if not self._recipient_matches(
+                            recipient_expected,
+                            self._normalize_recipients(str(getattr(item, "To", ""))),
+                        ):
+                            continue
+
+                        message_id = self._extract_message_id_from_item(item)
                         if message_id:
-                            return message_id, False
-
+                            return message_id
                     except Exception:
                         continue
-
             except Exception:
                 pass
 
             if attempt < self.message_id_retry_count - 1:
                 time.sleep(self.message_id_retry_interval_sec)
 
-        # 代替ID生成
-        fallback_id = self._generate_fallback_id(subject, sent_time_approx)
-        return fallback_id, True
+        return ""
+
+    def _extract_message_id_from_item(self, item) -> str:
+        """MailItemからMessage-IDを抽出する。"""
+        if item is None:
+            return ""
+
+        try:
+            message_id = item.PropertyAccessor.GetProperty(self.MESSAGE_ID_PROPERTY)
+            if message_id:
+                return str(message_id).strip()
+        except Exception:
+            pass
+
+        try:
+            headers = item.PropertyAccessor.GetProperty(self.MESSAGE_HEADER_PROPERTY)
+            return self._extract_message_id_from_headers(headers)
+        except Exception:
+            pass
+
+        return ""
+
+    @staticmethod
+    def _extract_message_id_from_headers(headers: str) -> str:
+        """メールヘッダ文字列からMessage-IDを抽出する。"""
+        if not headers:
+            return ""
+
+        match = re.search(
+            r"^Message-ID:\s*(<[^>]+>|[^\r\n]+)",
+            str(headers),
+            re.IGNORECASE | re.MULTILINE,
+        )
+        if not match:
+            return ""
+        return match.group(1).strip()
+
+    @staticmethod
+    def _normalize_recipients(recipients: str) -> List[str]:
+        """宛先文字列を正規化してアドレス配列にする。"""
+        if not recipients:
+            return []
+
+        normalized: List[str] = []
+        parts = re.split(r"[;,]", recipients)
+        for part in parts:
+            token = part.strip()
+            if not token:
+                continue
+
+            email_match = re.search(
+                r"([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})",
+                token,
+            )
+            if email_match:
+                normalized.append(email_match.group(1).lower())
+            else:
+                normalized.append(token.lower())
+
+        return normalized
+
+    @staticmethod
+    def _recipient_matches(expected: List[str], actual: List[str]) -> bool:
+        """宛先候補が一致するかを判定する。"""
+        if not expected or not actual:
+            return False
+
+        expected_set = set(expected)
+        actual_set = set(actual)
+        return bool(expected_set & actual_set)
 
     def _generate_fallback_id(
         self,

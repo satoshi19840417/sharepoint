@@ -11,8 +11,9 @@ main.py - 見積依頼スキル メインエントリポイント
 
 import json
 import sys
+import hashlib
 from pathlib import Path
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, Callable
 from dataclasses import asdict
 
 from .csv_handler import CSVHandler, ContactRecord
@@ -23,6 +24,7 @@ from .url_validator import URLValidator
 from .mail_sender import OutlookMailSender
 from .audit_logger import AuditLogger
 from .encryption import EncryptionManager
+from .send_ledger import SendLedger
 
 
 class QuoteRequestSkill:
@@ -61,6 +63,7 @@ class QuoteRequestSkill:
             str(self.base_dir / "logs"),
             self.encryption_manager
         )
+        self.send_ledger = SendLedger(str(self.base_dir / "logs" / "send_ledger.jsonl"))
 
     def _load_config(self) -> Dict[str, Any]:
         """設定ファイルを読み込む"""
@@ -222,7 +225,16 @@ class QuoteRequestSkill:
             "success": result.success,
             "error": result.error,
             "message_id": result.message_id,
+            "message_id_source": result.message_id_source,
         }
+
+    @staticmethod
+    def _build_dedupe_key(email: str, subject: str, body: str) -> str:
+        """同一送信判定キーを生成する。"""
+        normalized_email = str(email or "").strip().lower()
+        payload = f"{subject}\n{body}"
+        payload_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        return f"{normalized_email}:{payload_hash}"
 
     def send_bulk(
         self,
@@ -232,7 +244,8 @@ class QuoteRequestSkill:
         product_name: str,
         product_features: str,
         product_url: str,
-        input_file: str = ""
+        input_file: str = "",
+        confirm_rerun_callback: Optional[Callable[[ContactRecord, Dict[str, Any]], bool]] = None,
     ) -> Dict[str, Any]:
         """
         一斉送信を実行する。
@@ -255,6 +268,11 @@ class QuoteRequestSkill:
             # 実際の運用ではここでユーザー確認を挟む
 
         results = []
+        warnings: List[str] = []
+        seen_dedupe_keys = set()
+        skipped_duplicate_count = 0
+        skipped_rerun_count = 0
+        run_id = getattr(self.audit_logger, "execution_id", "")
 
         for record in records:
             # 本文生成
@@ -265,6 +283,77 @@ class QuoteRequestSkill:
                 product_features=product_features,
                 product_url=product_url,
             )
+            dedupe_key = self._build_dedupe_key(record.email, subject, template_content)
+
+            # 同一実行内重複チェック
+            if dedupe_key in seen_dedupe_keys:
+                skipped_duplicate_count += 1
+                warning_message = (
+                    f"同一実行内の重複送信をスキップしました: {record.email}"
+                )
+                warnings.append(warning_message)
+                results.append({
+                    "email": record.email,
+                    "company_name": record.company_name,
+                    "success": False,
+                    "message_id": "",
+                    "error": warning_message,
+                    "sent_at": "",
+                    "is_fallback_id": False,
+                    "message_id_source": "",
+                    "dedupe_key": dedupe_key,
+                    "skipped": True,
+                    "action": "skip_duplicate_in_run",
+                    "skip_duplicate_in_run": True,
+                    "confirmation_required": False,
+                })
+                continue
+            seen_dedupe_keys.add(dedupe_key)
+
+            # 24時間以内再実行チェック
+            recent_entry = self.send_ledger.find_recent(dedupe_key, window_hours=24)
+            if recent_entry:
+                should_send = False
+                if confirm_rerun_callback is not None:
+                    try:
+                        should_send = bool(confirm_rerun_callback(record, recent_entry))
+                    except Exception as callback_error:
+                        warnings.append(
+                            f"再実行確認コールバックエラー: {callback_error}"
+                        )
+                        should_send = False
+
+                if not should_send:
+                    skipped_rerun_count += 1
+                    warning_message = (
+                        "24時間以内の再実行を検知しました。"
+                        f"確認未実施のため送信をスキップ: {record.email}"
+                    )
+                    warnings.append(warning_message)
+                    results.append({
+                        "email": record.email,
+                        "company_name": record.company_name,
+                        "success": False,
+                        "message_id": "",
+                        "error": warning_message,
+                        "error_details": {
+                            "confirmation_required": True,
+                            "previous_send": {
+                                "timestamp": recent_entry.get("timestamp", ""),
+                                "message_id": recent_entry.get("message_id", ""),
+                                "run_id": recent_entry.get("run_id", ""),
+                            },
+                        },
+                        "sent_at": "",
+                        "is_fallback_id": False,
+                        "message_id_source": "",
+                        "dedupe_key": dedupe_key,
+                        "skipped": True,
+                        "action": "skip_rerun_confirmation_required",
+                        "skip_duplicate_in_run": False,
+                        "confirmation_required": True,
+                    })
+                    continue
 
             # 送信
             send_result = self.mail_sender.send_mail(
@@ -282,7 +371,22 @@ class QuoteRequestSkill:
                 "error": send_result.error,
                 "sent_at": send_result.sent_at.isoformat() if send_result.sent_at else "",
                 "is_fallback_id": send_result.is_fallback_id,
+                "message_id_source": send_result.message_id_source,
+                "dedupe_key": dedupe_key,
+                "skipped": False,
+                "action": "sent",
+                "skip_duplicate_in_run": False,
+                "confirmation_required": False,
             })
+
+            if send_result.success:
+                self.send_ledger.append_entry(
+                    dedupe_key=dedupe_key,
+                    recipient=record.email,
+                    message_id=send_result.message_id,
+                    run_id=run_id,
+                    sent_at=send_result.sent_at,
+                )
 
         # 監査ログ出力
         audit_log_path = self.audit_logger.write_audit_log(input_file, results)
@@ -296,18 +400,25 @@ class QuoteRequestSkill:
         # 画面表示用出力
         screen_output = self.audit_logger.format_screen_output(results)
 
-        success_count = sum(1 for r in results if r["success"])
-        failure_count = len(results) - success_count
+        attempted_results = [r for r in results if not r.get("skipped")]
+        success_count = sum(1 for r in attempted_results if r["success"])
+        failure_count = sum(1 for r in attempted_results if not r["success"])
+        warning_text = "; ".join(warnings)
 
         return {
             "success": failure_count == 0,
             "total": len(results),
+            "attempted_count": len(attempted_results),
             "success_count": success_count,
             "failure_count": failure_count,
+            "skipped_duplicate_count": skipped_duplicate_count,
+            "skipped_rerun_count": skipped_rerun_count,
             "audit_log_path": audit_log_path,
             "sent_list_path": sent_list_path,
             "unsent_list_path": unsent_list_path,
             "screen_output": screen_output,
+            "warning": warning_text,
+            "warnings": warnings,
             "results": results,
         }
 

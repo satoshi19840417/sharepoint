@@ -1,0 +1,48 @@
+{
+  "execution_id": "984fd844-7559-4c86-9771-33cd3364c669",
+  "start_time": "2026-02-12T15:18:55.095453",
+  "end_time": "2026-02-12T15:18:55.120090",
+  "operator": "千賀聡志",
+  "input_file": "tc61.csv",
+  "total_count": 5,
+  "success_count": 5,
+  "failure_count": 0,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDP7Em1GulGLGYxAT0GCXEnk2ze8RKwPPpwW7FM_LZew5zh2FZuA61E-JPp--KrqZ06xgrcOxsDIeGH3cXTlVasgYTx0PuKVh3wzx0unGYlIiM=",
+      "company_name": "Company1",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T15:18:55.095504"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDPGm0jMlOHSfy-XYiJKPBekA_mSl9vVeUtShye7dyUPUhGdJ086wC5KUEbN13Vypfwk6ceMf6ILZ5zQOxoxqs2PLm6WS-h0xcNQNJvU9U3xvM=",
+      "company_name": "Company2",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T15:18:55.095504"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDPrEzBYEjqiYDgP6OXE_7xOYUz8T51qLQ4SzCOSS_U4cGa34Bih-TES55u9pjEir4a3Cv2-K9Tn6iRL5kb5s46eaZ6eiEOj1yp2X8idhZsMVU=",
+      "company_name": "Company3",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T15:18:55.095504"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDPRHBc9ii8hniFJzMVoh--50ZBYbhKMnSC0MwgEg_APqdVciZg2LZuKTwv9EUj3xY01gsQvk-Q-licsODLZHmOMeens2dDNRt-MzT__OYtq20=",
+      "company_name": "Company4",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T15:18:55.095504"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDP5jCw0JulN2FM-5zQLIxWWEcIC1ukyLg--xEkhmYXLAQoooj3uCHFbWtRDrByx4UJ2nx99ZBh964pvKhoGdRC733eRwJ_3g4xb7koqvoFX9g=",
+      "company_name": "Company5",
+      "success": true,
+      "message_id": "DRYRUN:MOCK",
+      "sent_at": "2026-02-12T15:18:55.095504"
+    }
+  ],
+  "errors": []
+}

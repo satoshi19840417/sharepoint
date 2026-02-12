@@ -1,0 +1,86 @@
+{
+  "execution_id": "daf987dc-d782-49c5-a10c-31b2729d2e96",
+  "start_time": "2026-02-12T15:19:11.724031",
+  "end_time": "2026-02-12T15:19:11.725386",
+  "operator": "千賀聡志",
+  "input_file": "tc62.csv",
+  "total_count": 4,
+  "success_count": 0,
+  "failure_count": 4,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDf0nPmMq4Y9-r9XNfuPUO_60nE-DwtzLVBsdoPyiH1o8oPxwCh-PlwR7ApztqzwthabxPE-M5w5SUpOAfhMUgylgI2qxS6r1eybmKrrio_fGA=",
+      "company_name": "Company1",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDfb0qKLmuZPtM0Tb8s868pjGDJj8lqjOYDcl68i1em8LzQ157MohOPaXxmtmMeddRuROBe6KxmS3VVogsfBrVoB3ZXdDBbCi02I5KMDnQDfN8=",
+      "company_name": "Company2",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDfi9ufXxIqFzL9V0OxTMET8NFLb6HBe5bOt-SF1gVxY5Fdze9lgWFG43PavfasGm71tUVIt7dNLzf12JgZq_NQbflxkkfg6ssFQ3hUwHRMFfs=",
+      "company_name": "Company3",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDfkVTC9LFoBG02_kIF9ErkYpMoxdph1XGJxaYtW4Y4qcdq7PwwZILU8JQ8rYQt1ekw1uPxdq24oslSy_oF2ns7oCiNiqzmjqAZ4RxA2fqJj0o=",
+      "company_name": "Company4",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    }
+  ],
+  "errors": [
+    {
+      "email_masked": "***@example.com",
+      "error": {
+        "confirmation_required": true,
+        "previous_send": {
+          "timestamp": "2026-02-12T15:18:55.309259+00:00",
+          "message_id": "DRYRUN:MOCK",
+          "run_id": "3cff555e-9435-400d-8e6e-b6420606980b"
+        }
+      }
+    },
+    {
+      "email_masked": "***@example.com",
+      "error": {
+        "confirmation_required": true,
+        "previous_send": {
+          "timestamp": "2026-02-12T15:18:55.309259+00:00",
+          "message_id": "DRYRUN:MOCK",
+          "run_id": "3cff555e-9435-400d-8e6e-b6420606980b"
+        }
+      }
+    },
+    {
+      "email_masked": "***@example.com",
+      "error": {
+        "confirmation_required": true,
+        "previous_send": {
+          "timestamp": "2026-02-12T15:18:55.309259+00:00",
+          "message_id": "DRYRUN:MOCK",
+          "run_id": "3cff555e-9435-400d-8e6e-b6420606980b"
+        }
+      }
+    },
+    {
+      "email_masked": "***@example.com",
+      "error": {
+        "confirmation_required": true,
+        "previous_send": {
+          "timestamp": "2026-02-12T15:18:55.309259+00:00",
+          "message_id": "DRYRUN:MOCK",
+          "run_id": "3cff555e-9435-400d-8e6e-b6420606980b"
+        }
+      }
+    }
+  ]
+}

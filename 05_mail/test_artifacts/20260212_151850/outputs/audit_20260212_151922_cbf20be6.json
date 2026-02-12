@@ -1,0 +1,39 @@
+{
+  "execution_id": "cbf20be6-0253-44c2-98df-43c14b1c0f9a",
+  "start_time": "2026-02-12T15:19:22.228844",
+  "end_time": "2026-02-12T15:19:22.229933",
+  "operator": "千賀聡志",
+  "input_file": "tc85.csv",
+  "total_count": 2,
+  "success_count": 1,
+  "failure_count": 1,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDqvPynxhMf29YAfgmnaBpEJlxmGwtl4emoiIPG6pNtv90XF6Rs_tc-0Tk6pEXOJsUZrSFpqPRhpW2SZvtMfuOBMjGe4-2_Sb2SGWFimjAHmPk=",
+      "company_name": "Company1",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXDqjV3mnggqEPjMAof2BPDAf9SxZ1ENL9xw_Qomu0IQyqQ9n3BXtwk84F_2A6QcJPiVdx_DLZOt90vv77GyMJZG-HjCUrmAJJBGHLvCORF-jBU=",
+      "company_name": "Company2",
+      "success": true,
+      "message_id": "MID-SUCCESS",
+      "sent_at": "2026-02-12T15:19:22.228863"
+    }
+  ],
+  "errors": [
+    {
+      "email_masked": "***@example.com",
+      "error": {
+        "confirmation_required": true,
+        "previous_send": {
+          "timestamp": "2026-02-12T15:19:06.418310+00:00",
+          "message_id": "MID-SUCCESS",
+          "run_id": "762bf221-9216-4347-b482-49a7e78d85fe"
+        }
+      }
+    }
+  ]
+}
