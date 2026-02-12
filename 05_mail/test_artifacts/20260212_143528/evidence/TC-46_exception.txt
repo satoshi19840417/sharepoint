@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\05_mail\tests\run_tc_suite.py", line 189, in run_case
+    payload = fn()
+  File "C:\Users\千賀聡志\OneDrive - セルジェンテック株式会社\sharepointリスト化\05_mail\tests\run_tc_suite.py", line 917, in tc46
+    with mock.patch("scripts.url_validator.requests.head", side_effect=requests.exceptions.Timeout("t")) as mh, mock.patch(
+                                                                                                                ~~~~~~~~~~^
+        "scripts.url_validator.time.sleep", return_value=None
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ):
+    ^
+  File "C:\Python313\Lib\unittest\mock.py", line 1481, in __enter__
+    self.target = self.getter()
+                  ~~~~~~~~~~~^^
+  File "C:\Python313\Lib\pkgutil.py", line 528, in resolve_name
+    result = getattr(result, p)
+AttributeError: module 'scripts.url_validator' has no attribute 'time'
