@@ -55,11 +55,13 @@ class OutlookMailSender:
 
     # Message-ID取得用MAPIプロパティ
     MESSAGE_ID_PROPERTY = "http://schemas.microsoft.com/mapi/proptag/0x1035001F"
+    MESSAGE_ID_PROPERTY_ANSI = "http://schemas.microsoft.com/mapi/proptag/0x1035001E"
+    MESSAGE_ID_HEADER_URN = "urn:schemas:mailheader:message-id"
     MESSAGE_HEADER_PROPERTY = "http://schemas.microsoft.com/mapi/proptag/0x007D001F"
     SENT_FOLDER_ID = 5  # olFolderSentMail
     SENT_TIME_WINDOW_SEC = 180
     DIRECT_MESSAGE_ID_POLL_INTERVAL_SEC = 0.5
-    DIRECT_MESSAGE_ID_POLL_TIMEOUT_SEC = 5.0
+    DIRECT_MESSAGE_ID_POLL_TIMEOUT_SEC = 8.0
     MAX_SENT_ITEMS_SCAN = 200
 
     def __init__(
@@ -280,6 +282,7 @@ class OutlookMailSender:
     ) -> str:
         """送信済みフォルダからMessage-IDを再検索する。"""
         recipient_expected = self._normalize_recipients(recipient)
+        sent_time_base = self._normalize_datetime(sent_time_approx)
         for attempt in range(self.message_id_retry_count):
             try:
                 outlook = self._get_outlook()
@@ -289,8 +292,8 @@ class OutlookMailSender:
                 items.Sort("[SentOn]", True)  # 降順
 
                 scanned = 0
-                min_allowed_time = sent_time_approx - datetime.timedelta(seconds=time_window_sec)
-                max_allowed_time = sent_time_approx + datetime.timedelta(seconds=time_window_sec)
+                min_allowed_time = sent_time_base - datetime.timedelta(seconds=time_window_sec)
+                max_allowed_time = sent_time_base + datetime.timedelta(seconds=time_window_sec)
 
                 for item in items:
                     scanned += 1
@@ -302,24 +305,33 @@ class OutlookMailSender:
                         if item_subject != str(subject).strip():
                             continue
 
-                        item_sent_on = getattr(item, "SentOn", None)
-                        if not isinstance(item_sent_on, datetime.datetime):
+                        item_sent_on_raw = getattr(item, "SentOn", None)
+                        if not isinstance(item_sent_on_raw, datetime.datetime):
                             continue
+                        item_sent_on = self._normalize_datetime(item_sent_on_raw)
 
                         if item_sent_on < min_allowed_time:
-                            break
+                            continue
                         if item_sent_on > max_allowed_time:
                             continue
 
-                        if not self._recipient_matches(
-                            recipient_expected,
-                            self._normalize_recipients(str(getattr(item, "To", ""))),
+                        actual_recipients = self._normalize_recipients(
+                            str(getattr(item, "To", ""))
+                        )
+                        if (
+                            recipient_expected
+                            and actual_recipients
+                            and not self._recipient_matches(recipient_expected, actual_recipients)
                         ):
                             continue
 
                         message_id = self._extract_message_id_from_item(item)
                         if message_id:
                             return message_id
+
+                        surrogate_id = self._build_sent_item_surrogate_id(item)
+                        if surrogate_id:
+                            return surrogate_id
                     except Exception:
                         continue
             except Exception:
@@ -330,17 +342,40 @@ class OutlookMailSender:
 
         return ""
 
+    @staticmethod
+    def _normalize_datetime(value: datetime.datetime) -> datetime.datetime:
+        """比較用にタイムゾーン情報を外したdatetimeへ正規化する。"""
+        if value.tzinfo is not None:
+            return value.replace(tzinfo=None)
+        return value
+
+    def _build_sent_item_surrogate_id(self, item) -> str:
+        """Message-IDが取得できない場合の送信済みアイテム由来ID。"""
+        try:
+            entry_id = str(getattr(item, "EntryID", "")).strip()
+        except Exception:
+            entry_id = ""
+        if not entry_id:
+            return ""
+        return f"OUTLOOK:{entry_id}"
+
     def _extract_message_id_from_item(self, item) -> str:
         """MailItemからMessage-IDを抽出する。"""
         if item is None:
             return ""
 
-        try:
-            message_id = item.PropertyAccessor.GetProperty(self.MESSAGE_ID_PROPERTY)
-            if message_id:
-                return str(message_id).strip()
-        except Exception:
-            pass
+        candidates = [
+            self.MESSAGE_ID_PROPERTY,
+            self.MESSAGE_ID_PROPERTY_ANSI,
+            self.MESSAGE_ID_HEADER_URN,
+        ]
+        for prop in candidates:
+            try:
+                message_id = item.PropertyAccessor.GetProperty(prop)
+                if message_id:
+                    return str(message_id).strip()
+            except Exception:
+                continue
 
         try:
             headers = item.PropertyAccessor.GetProperty(self.MESSAGE_HEADER_PROPERTY)
@@ -384,16 +419,16 @@ class OutlookMailSender:
             )
             if email_match:
                 normalized.append(email_match.group(1).lower())
-            else:
-                normalized.append(token.lower())
 
         return normalized
 
     @staticmethod
     def _recipient_matches(expected: List[str], actual: List[str]) -> bool:
         """宛先候補が一致するかを判定する。"""
-        if not expected or not actual:
-            return False
+        if not expected:
+            return True
+        if not actual:
+            return True
 
         expected_set = set(expected)
         actual_set = set(actual)

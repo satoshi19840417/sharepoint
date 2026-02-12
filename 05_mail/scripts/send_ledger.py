@@ -69,6 +69,7 @@ class SendLedger:
         self,
         dedupe_key: str,
         window_hours: int = 24,
+        run_id: Optional[str] = None,
         now: Optional[datetime.datetime] = None,
     ) -> Optional[Dict[str, Any]]:
         """指定キーのうち、window_hours以内に送信履歴がある場合は最新1件を返す。"""
@@ -78,6 +79,8 @@ class SendLedger:
         entries = self.load_recent_entries(now=current)
         for entry in reversed(entries):
             if str(entry.get("dedupe_key", "")) != dedupe_key:
+                continue
+            if run_id and str(entry.get("run_id", "")) != run_id:
                 continue
             ts = self._parse_iso_timestamp(str(entry.get("timestamp", "")))
             if ts is None:

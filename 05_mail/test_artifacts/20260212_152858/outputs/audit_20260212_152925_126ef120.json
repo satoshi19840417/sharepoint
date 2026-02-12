@@ -1,0 +1,32 @@
+{
+  "execution_id": "126ef120-5909-4bd6-86a2-1317a8b4a8e1",
+  "start_time": "2026-02-12T15:29:25.217185",
+  "end_time": "2026-02-12T15:29:25.220986",
+  "operator": "千賀聡志",
+  "input_file": "tc91_second.csv",
+  "total_count": 1,
+  "success_count": 0,
+  "failure_count": 1,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjXNFckfVeenKKUWCqYZmg8Mo5_33_cq9HVScv_CGDcrc-__sZ9ljBqLPLr7prBxs5-x2oQqf1NIft-wWKMr2EUFjCw==",
+      "company_name": "A社",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    }
+  ],
+  "errors": [
+    {
+      "email_masked": "***@example.com",
+      "error": {
+        "confirmation_required": true,
+        "previous_send": {
+          "timestamp": "2026-02-12T15:29:25.217206+00:00",
+          "message_id": "MID-91",
+          "run_id": "126ef120-5909-4bd6-86a2-1317a8b4a8e1"
+        }
+      }
+    }
+  ]
+}

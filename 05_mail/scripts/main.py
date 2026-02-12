@@ -273,6 +273,7 @@ class QuoteRequestSkill:
         skipped_duplicate_count = 0
         skipped_rerun_count = 0
         run_id = getattr(self.audit_logger, "execution_id", "")
+        rerun_scope_run_id = run_id if self.config.get("test_mode", False) else None
 
         for record in records:
             # 本文生成
@@ -311,7 +312,11 @@ class QuoteRequestSkill:
             seen_dedupe_keys.add(dedupe_key)
 
             # 24時間以内再実行チェック
-            recent_entry = self.send_ledger.find_recent(dedupe_key, window_hours=24)
+            recent_entry = self.send_ledger.find_recent(
+                dedupe_key,
+                window_hours=24,
+                run_id=rerun_scope_run_id,
+            )
             if recent_entry:
                 should_send = False
                 if confirm_rerun_callback is not None:

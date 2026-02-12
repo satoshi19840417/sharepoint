@@ -1,0 +1,32 @@
+{
+  "execution_id": "b01c9ff2-182e-4f75-861e-cb048c45476e",
+  "start_time": "2026-02-12T15:29:25.187909",
+  "end_time": "2026-02-12T15:29:25.190202",
+  "operator": "千賀聡志",
+  "input_file": "tc85.csv",
+  "total_count": 2,
+  "success_count": 1,
+  "failure_count": 1,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjXNFoV-m6K9-GAZltty0xaURbr6KcLojne9i-Q80Ls0xMiF9zGwg9HdIaLQuTV5M9aCANMsdB_3vw2U5UL9XtaUzMayiLjq4vVlE09-HKxI_Qn8=",
+      "company_name": "Company1",
+      "success": true,
+      "message_id": "MID-SUCCESS",
+      "sent_at": "2026-02-12T15:29:25.187931"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjXNFTReiDTh0ldMT--47U8y3n2yYY9Vx4mSqsW06V0B91wQYOzt0TbGRu7X0ka0plZQwndxz4p2_dkeXRj0RcNXdhE73oi2Gh1oYN6G2_u7pZC8=",
+      "company_name": "Company2",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    }
+  ],
+  "errors": [
+    {
+      "email_masked": "***@example.com",
+      "error": "Invalid address"
+    }
+  ]
+}
