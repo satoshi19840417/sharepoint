@@ -1,0 +1,27 @@
+{
+  "execution_id": "f5937c11-632d-4e2b-9948-893cbd917acc",
+  "start_time": "2026-02-12T14:37:18.262363",
+  "end_time": "2026-02-12T14:37:18.264100",
+  "operator": "千賀聡志",
+  "input_file": "tc90.csv",
+  "total_count": 2,
+  "success_count": 2,
+  "failure_count": 0,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjWcOe74wkHnjc9zXzJVQwxl0rXFhGPsP0SjBCfs7qIUWtkrvk9P_xIERFIVmP-DB4wRA6O9_4DnMZxExUvtzAqkQlQ==",
+      "company_name": "Company1",
+      "success": true,
+      "message_id": "MID-DUP",
+      "sent_at": "2026-02-12T14:37:18.262431"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjWcOqBKpgl4v-8rWV53LnDO2fXQ1iSCLoy-x7wk4NH7NHbrdF4YfhrXhGam0XAuIVO30biQLcKqryK7s8jH5Dz0Qog==",
+      "company_name": "Company2",
+      "success": true,
+      "message_id": "MID-DUP",
+      "sent_at": "2026-02-12T14:37:18.262431"
+    }
+  ],
+  "errors": []
+}

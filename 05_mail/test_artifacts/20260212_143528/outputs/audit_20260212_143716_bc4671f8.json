@@ -1,0 +1,32 @@
+{
+  "execution_id": "bc4671f8-9737-4073-95a0-ef6025cc22a2",
+  "start_time": "2026-02-12T14:37:16.013262",
+  "end_time": "2026-02-12T14:37:16.978915",
+  "operator": "千賀聡志",
+  "input_file": "input.csv",
+  "total_count": 2,
+  "success_count": 1,
+  "failure_count": 1,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjWcMcxNm9NhJ9gsl1GulxfK_DjkJZv6vV8DdRtVjucwtqD1lOx1nWGxO4BFoZTf2W50BnkUzVTUPddN_PC6S4xNvD0xG40Vz7cI1eOPzsLh3F_4=",
+      "company_name": "A社",
+      "success": true,
+      "message_id": "MID-1",
+      "sent_at": "2026-02-12T14:37:16.013629"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjWcMHSz4KePa7rpePsnoC5O49WM5k6CgvBtMaj3uFOukEq99EzDa4hgeIeEx-M1pDNxo_69tq7VENSjQtCw1iQZHCA==",
+      "company_name": "B社",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    }
+  ],
+  "errors": [
+    {
+      "email_masked": "b***@example.com",
+      "error": "Invalid recipient"
+    }
+  ]
+}
