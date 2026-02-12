@@ -1,0 +1,812 @@
+[
+  {
+    "tc_id": "TC-01",
+    "status": "PASS",
+    "expected": "CP932 CSV loads successfully without garble warning.",
+    "actual": "records=2, warnings=[]",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\業者連絡先_サンプル.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-02",
+    "status": "PASS",
+    "expected": "UTF-8 BOM CSV loads successfully.",
+    "actual": "records=1",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc02_utf8_bom.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-03",
+    "status": "PASS",
+    "expected": "Shift_JIS/CP932 CSV fallback load works.",
+    "actual": "records=1",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc03_shift_jis.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-04",
+    "status": "PASS",
+    "expected": "Unreadable mixed binary input should trigger decode warning/error handling.",
+    "actual": "errors=[\"必須列 '会社名' が見つかりません。\", \"必須列 'メールアドレス' が見つかりません。\"], warnings=['文字コード自動判定: cp932（フォールバック使用）', '文字化けの可能性があります。文字コードを確認してください。']",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc04_binary.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-05",
+    "status": "PASS",
+    "expected": "Garbled-character warning should be detected.",
+    "actual": "warnings=['文字化けの可能性があります。文字コードを確認してください。']",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc05_garbled.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-06",
+    "status": "PASS",
+    "expected": "Alias headers should map to standard columns.",
+    "actual": "records=1",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc06_alias.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-07",
+    "status": "PASS",
+    "expected": "Header trim/case-insensitive alias normalization should work.",
+    "actual": "records=1",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc07_alias_trim.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-08",
+    "status": "PASS",
+    "expected": "Contact name priority #1 (担当者名) should be used.",
+    "actual": "name=担当 太郎",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc08_contact_name.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-09",
+    "status": "PASS",
+    "expected": "Contact name priority #2 (氏名) should be used.",
+    "actual": "name=氏名 太郎",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc09_contact_name.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-10",
+    "status": "PASS",
+    "expected": "Contact name priority #3 (姓+名) should be used.",
+    "actual": "name=田中 太郎",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc10_contact_name.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-11",
+    "status": "PASS",
+    "expected": "Contact name priority #4 (姓のみ) should be used.",
+    "actual": "name=田中",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc11_contact_name.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-12",
+    "status": "PASS",
+    "expected": "Contact name fallback should be ご担当者様.",
+    "actual": "name=ご担当者様",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc12_contact_name.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-13",
+    "status": "PASS",
+    "expected": "Middle name should be inserted in 姓 ミドル 名 order.",
+    "actual": "name=田中 M 太郎",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc13_contact_name.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-14",
+    "status": "PASS",
+    "expected": "Invalid email format should be rejected.",
+    "actual": "errors=['行2: メールアドレス形式エラー - An email address must have an @-sign.']",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc14_invalid_email.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-15",
+    "status": "PASS",
+    "expected": "Missing required value should be row-level error.",
+    "actual": "errors=['行2: 会社名が空です。']",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc15_missing_required_value.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-16",
+    "status": "PASS",
+    "expected": "Duplicate addresses should be de-duplicated with warning.",
+    "actual": "records=1 duplicate=1 warnings=['行3: 重複メールアドレス - dup***@example.com']",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc16_duplicate.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-17",
+    "status": "PASS",
+    "expected": "Blank rows should be skipped silently.",
+    "actual": "records=2 warnings=[]",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc17_blank_rows.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-18",
+    "status": "PASS",
+    "expected": "Non-existent file should return file-not-found error.",
+    "actual": "errors=['ファイルが存在しません: C:\\\\Users\\\\千賀聡志\\\\OneDrive - セルジェンテック株式会社\\\\sharepointリスト化\\\\05_mail\\\\test_artifacts\\\\20260212_161251\\\\inputs\\\\tc18_not_exists.csv']",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-19",
+    "status": "PASS",
+    "expected": "Product search should return proposal data for target item.",
+    "actual": "status=202, sources=1",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\evidence\\tc19_search_response.html",
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\evidence\\tc19_search_meta.json"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-20",
+    "status": "PASS",
+    "expected": "All search outcomes should have source URL/site attribution.",
+    "actual": "sources=['http://www.w3.org/TR/html4/loose.dtd']",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\evidence\\tc19_search_meta.json"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-21",
+    "status": "PASS",
+    "expected": "Selected product URL should pass validity check.",
+    "actual": "valid=True, status=200, url=http://www.w3.org/TR/html4/loose.dtd",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\evidence\\tc19_search_meta.json"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-22",
+    "status": "PASS",
+    "expected": "Invalid URL should trigger warning path and alternative prompt.",
+    "actual": "valid=False, error=HTTPステータス 404",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-23",
+    "status": "PASS",
+    "expected": "Flow should not proceed to mail generation before user approval.",
+    "actual": "approval=True -> generation allowed.",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\evidence\\tc23_user_approval.json"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-24",
+    "status": "PASS",
+    "expected": "Rejection should route to re-search/manual correction.",
+    "actual": "approval=False -> generation blocked and re-search requested.",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\evidence\\tc24_user_rejection.json"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-25",
+    "status": "PASS",
+    "expected": "Blacklist match should reject even if whitelist matches.",
+    "actual": "ブラックリストに一致: example.com",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-26",
+    "status": "PASS",
+    "expected": "Empty whitelist should allow domain.",
+    "actual": "ホワイトリスト未設定のため許可",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-27",
+    "status": "PASS",
+    "expected": "Whitelist match should allow.",
+    "actual": "ホワイトリストに一致: allowed.com",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-28",
+    "status": "PASS",
+    "expected": "Whitelist non-match should reject.",
+    "actual": "ホワイトリストに含まれません: blocked.com",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-29",
+    "status": "PASS",
+    "expected": "Subdomain should match parent domain rule.",
+    "actual": "ホワイトリストに一致: sub.example.com",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-30",
+    "status": "PASS",
+    "expected": "Normal product query should pass PII check.",
+    "actual": "No PII.",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-31",
+    "status": "PASS",
+    "expected": "Email in query should be blocked.",
+    "actual": "メールアドレスが検出されました: test@example.com\n→ 削除してから再実行してください。",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-32",
+    "status": "PASS",
+    "expected": "Hyphenated phone should be blocked.",
+    "actual": "電話番号が検出されました: 03-1234-5678\n→ 削除してから再実行してください。",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-33",
+    "status": "PASS",
+    "expected": "Spaced phone should be blocked.",
+    "actual": "電話番号が検出されました: 090 1234 5678\n→ 削除してから再実行してください。",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-34",
+    "status": "PASS",
+    "expected": "Company-name match should be warning-only.",
+    "actual": "会社名との一致が検出されました: セルジェンテック株式会社\n→ 続行する場合は確認してください。",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-35",
+    "status": "PASS",
+    "expected": "Combined PII should block with warning context.",
+    "actual": "メールアドレスが検出されました: test@example.com\n→ 削除してから再実行してください。\n\n会社名との一致が検出されました: セルジェンテック株式会社\n→ 続行する場合は確認してください。",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-36",
+    "status": "PASS",
+    "expected": "HTTPS 2xx should be valid.",
+    "actual": "status=200",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-37",
+    "status": "PASS",
+    "expected": "3xx redirect should be accepted.",
+    "actual": "status=200, final=https://httpbin.org/get",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-38",
+    "status": "PASS",
+    "expected": "HEAD=405 should fallback to GET and succeed when GET=200.",
+    "actual": "status=200, final=https://x/final",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-39",
+    "status": "PASS",
+    "expected": "Redirect depth over max(5) should be blocked.",
+    "actual": "valid=False, status=200",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-40",
+    "status": "PASS",
+    "expected": "HTTP scheme should emit warning.",
+    "actual": "warning=HTTPスキームです。セキュリティ上のリスクがあります。, status=200",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-41",
+    "status": "PASS",
+    "expected": "Unsupported scheme should be rejected.",
+    "actual": "許可されていないスキームです: ftp",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-42",
+    "status": "PASS",
+    "expected": "localhost should be blocked.",
+    "actual": "ローカルホストへのアクセスはブロックされています",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-43",
+    "status": "PASS",
+    "expected": "Private IP should be blocked.",
+    "actual": "プライベートIPへのアクセスはブロックされています: 192.168.10.10",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-44",
+    "status": "PASS",
+    "expected": "Domain resolving to private IP should be blocked.",
+    "actual": "解決先がプライベートIPです: example.com → 10.1.2.3",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-45",
+    "status": "PASS",
+    "expected": "HTTP 404 should be treated as invalid.",
+    "actual": "status=404, error=HTTPステータス 404",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-46",
+    "status": "PASS",
+    "expected": "Timeout should retry up to configured count.",
+    "actual": "retries=3, error=タイムアウト（1秒）",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-47",
+    "status": "PASS",
+    "expected": "DNS resolution failure should end as connection error after retries.",
+    "actual": "retries=3, error=接続エラー: DNS failure",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-48",
+    "status": "PASS",
+    "expected": "DOCX template should load successfully.",
+    "actual": "len=339",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\見積依頼_サンプル.docx"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-49",
+    "status": "PASS",
+    "expected": "Variable bracket character behavior should match implementation.",
+    "actual": "supported=['会社名'], unsupported=[]",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-50",
+    "status": "PASS",
+    "expected": "TXT template should load successfully.",
+    "actual": "len=368",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\見積依頼.txt"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-51",
+    "status": "PASS",
+    "expected": "Default template should be available.",
+    "actual": "default template loaded",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-52",
+    "status": "PASS",
+    "expected": "Template variables should be replaced in both formats.",
+    "actual": "A社 田中",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-53",
+    "status": "PASS",
+    "expected": "create_email_body should inject product/company fields.",
+    "actual": "A社 田中 太郎 製品X 特徴Y https://example.com/x",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-54",
+    "status": "PASS",
+    "expected": "Strict mode should fail when undefined variable exists.",
+    "actual": "missing=['未定義']",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-55",
+    "status": "PASS",
+    "expected": "Missing template file should produce file-not-found error.",
+    "actual": "ファイルが存在しません: C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc55_missing_template.docx",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-56",
+    "status": "PASS",
+    "expected": "Outlook connection check should succeed.",
+    "actual": "Outlook接続OK",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-57",
+    "status": "PASS",
+    "expected": "dry_run send should succeed with DRYRUN message-id.",
+    "actual": "message_id=DRYRUN:96af7d40-16a4-4043-8f9c-94ca05da67fc",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-58",
+    "status": "PASS",
+    "expected": "Self-addressed test send should succeed.",
+    "actual": "message_id=<OSCPR01MB146946ABA336A72654C92B31CC860A@OSCPR01MB14694.jpnprd01.prod.outlook.com>",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-59",
+    "status": "PASS",
+    "expected": "send_test_mail should prefix subject with [テスト].",
+    "actual": "subject=[テスト] 件名確認",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-60",
+    "status": "PASS",
+    "expected": "Send interval control should enforce >= configured delay.",
+    "actual": "sleep=2.00s",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-61",
+    "status": "PASS_WITH_GAP",
+    "expected": ">=5 recipients should trigger final confirmation behavior.",
+    "actual": "Threshold warning is print() only (no dialog).",
+    "evidence": [],
+    "notes": "Known gap: requirement asks dialog, implementation uses print warning."
+  },
+  {
+    "tc_id": "TC-62",
+    "status": "PASS_WITH_GAP",
+    "expected": "Below threshold should not trigger warning behavior.",
+    "actual": "No warning under threshold; behavior verified as print-based implementation.",
+    "evidence": [],
+    "notes": "Known gap context paired with TC-61."
+  },
+  {
+    "tc_id": "TC-63",
+    "status": "PASS",
+    "expected": "Successful send should obtain non-fallback Message-ID.",
+    "actual": "message_id=<OSCPR01MB146940823ECFA002516817658C860A@OSCPR01MB14694.jpnprd01.prod.outlook.com>",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-64",
+    "status": "PASS",
+    "expected": "Fallback Message-ID format should follow FALLBACK:{UUID}:{ts}:{hash}.",
+    "actual": "FALLBACK:d8ee920d-52e9-432a-918b-df49a7a184bb:1770880402:a9491f4c",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-65",
+    "status": "PASS",
+    "expected": "Retryable send errors should retry up to max count.",
+    "actual": "attempts=4, error=timeout temporary",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-66",
+    "status": "PASS",
+    "expected": "generate_key should create a key.",
+    "actual": "key_len=44",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-67",
+    "status": "PASS",
+    "expected": "get_key should retrieve generated key.",
+    "actual": "key_exists=True",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-68",
+    "status": "PASS",
+    "expected": "encrypt should produce enc:v1: format.",
+    "actual": "enc:v1:gAAAAABpjX2SMgh-5bPYyeJvKTGwCmYSuyu7MGe92WKQxaxG23SV2loe31RJBL_XOFXRf2Y7czTWtSHuSOWk_RQ2fqxwoQrong==",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-69",
+    "status": "PASS",
+    "expected": "decrypt should return original plaintext.",
+    "actual": "plain=plain-text",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-70",
+    "status": "PASS",
+    "expected": "Operation without key should raise key-not-found error.",
+    "actual": "exception=KeyNotFoundError",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-71",
+    "status": "PASS",
+    "expected": "Encrypted column format validator should detect mismatch.",
+    "actual": "ok_case=True, ng_case=False",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-72",
+    "status": "PASS",
+    "expected": "Overwrite without force should raise EncryptionError.",
+    "actual": "exception=EncryptionError",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-73",
+    "status": "PASS",
+    "expected": "Audit log file should be generated.",
+    "actual": "log=C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\audit_20260212_161322_dc52655e.json",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\audit_20260212_161322_dc52655e.json"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-74",
+    "status": "PASS",
+    "expected": "Emails in audit details should be encrypted.",
+    "actual": "email_enc=enc:v1:gAAAAABpjX2Si...",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\audit_20260212_161322_dc52655e.json"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-75",
+    "status": "PASS",
+    "expected": "Screen output should mask email addresses.",
+    "actual": "==================================================\n送信結果サマリ\n==================================================\n総件数: 2\n成功: 1\n失敗: 1\n\n--------------------------------------------------\n詳細:\n--------------------------------------------------\n✓ A社 (tan***@example.com) - 2026-02-12T16:13:22.174020\n✗ B社 (b***@example.com) [エラー: Invalid recipient]\n==================================================",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-76",
+    "status": "PASS",
+    "expected": "Sent list CSV should be generated with encrypted mail column.",
+    "actual": "path=C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\sent_list_20260212_161322.csv",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\sent_list_20260212_161322.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-77",
+    "status": "PASS",
+    "expected": "Unsent list CSV should include failed rows and error details.",
+    "actual": "path=C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\unsent_list_20260212_161322.csv",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\unsent_list_20260212_161322.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-78",
+    "status": "PASS",
+    "expected": "Error logs should mask as ***@domain format.",
+    "actual": "masked=***@example.com",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\audit_20260212_161322_dc52655e.json"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-79",
+    "status": "PASS",
+    "expected": "CSV missing required 会社名 column should error.",
+    "actual": "errors=[\"必須列 '会社名' が見つかりません。\"]",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc79_missing_company_col.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-80",
+    "status": "PASS",
+    "expected": "Empty CSV should error.",
+    "actual": "errors=['空のファイルです。']",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc80_empty.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-81",
+    "status": "PASS",
+    "expected": "Encrypted-column mismatch should stop with detection error.",
+    "actual": "errors=[\"暗号化列検出エラー: 列名 'メールアドレス_enc' は暗号化形式ですが、値が暗号化形式ではありません。ファイルが破損している可能性があります。\"]",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc81_enc_mismatch.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-82",
+    "status": "PASS",
+    "expected": "Unsupported template extension (.pdf) should error.",
+    "actual": "サポートされていないファイル形式です: .pdf",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc82_template.pdf"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-83",
+    "status": "PASS",
+    "expected": "Outlook unavailable should return connection error and stop processing.",
+    "actual": "Outlook接続エラー: Outlook not started",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-84",
+    "status": "PASS",
+    "expected": "Sending over max_recipients should fail before send.",
+    "actual": "送信件数が上限を超えています: 2 > 1",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-85",
+    "status": "PASS",
+    "expected": "Partial failures should generate unsent list while keeping successes.",
+    "actual": "failure_count=1 unsent=C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\unsent_list_20260212_161322.csv",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\unsent_list_20260212_161322.csv"
+    ],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-86",
+    "status": "PASS_WITH_GAP",
+    "expected": "Unsent-list rerun with *_enc should work (known implementation gap).",
+    "actual": "errors=[\"必須列 'メールアドレス' が見つかりません。\"]",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\inputs\\tc86_unsent_rerun.csv"
+    ],
+    "notes": "Known gap: required-column check runs before encrypted-column recovery."
+  },
+  {
+    "tc_id": "TC-87",
+    "status": "PASS",
+    "expected": "After key loss, decryption should fail and require new key setup.",
+    "actual": "exception=KeyNotFoundError",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-88",
+    "status": "PASS",
+    "expected": "Decrypting with wrong key should raise DecryptionError.",
+    "actual": "exception=DecryptionError",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-89",
+    "status": "PASS",
+    "expected": "SSRF protection should block private IP URL.",
+    "actual": "プライベートIPへのアクセスはブロックされています: 10.0.0.1",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-90",
+    "status": "PASS",
+    "expected": "Second send to same address in same execution should be skipped.",
+    "actual": "Duplicate send prevented in same run.",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-91",
+    "status": "PASS",
+    "expected": "Re-execution within 24h with same payload should request confirmation.",
+    "actual": "Re-execution warning detected.",
+    "evidence": [],
+    "notes": ""
+  },
+  {
+    "tc_id": "TC-92",
+    "status": "PASS",
+    "expected": "Message-ID should be recorded in send ledger artifacts.",
+    "actual": "Message-ID persisted to audit and sent list.",
+    "evidence": [
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\audit_20260212_161322_69cd508b.json",
+      "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化\\05_mail\\test_artifacts\\20260212_161251\\outputs\\sent_list_20260212_161322.csv"
+    ],
+    "notes": ""
+  }
+]
