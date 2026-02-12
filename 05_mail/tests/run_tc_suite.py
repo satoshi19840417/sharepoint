@@ -915,7 +915,7 @@ class TCSuiteRunner:
         def tc46() -> Dict[str, Any]:
             local_v = URLValidator(timeout=1, retry_count=2, retry_interval=0)
             with mock.patch("scripts.url_validator.requests.head", side_effect=requests.exceptions.Timeout("t")) as mh, mock.patch(
-                "scripts.url_validator.time.sleep", return_value=None
+                "time.sleep", return_value=None
             ):
                 res = local_v.validate("https://httpbin.org/delay/11")
             if not res.valid and "タイムアウト" in res.error and mh.call_count == 3:
@@ -933,7 +933,7 @@ class TCSuiteRunner:
             with mock.patch("scripts.url_validator.socket.gethostbyname", side_effect=socket.gaierror()), mock.patch(
                 "scripts.url_validator.requests.head",
                 side_effect=requests.exceptions.RequestException("DNS failure"),
-            ) as mh, mock.patch("scripts.url_validator.time.sleep", return_value=None):
+            ) as mh, mock.patch("time.sleep", return_value=None):
                 res = local_v.validate("https://nonexistent.invalid")
             if not res.valid and "接続エラー" in res.error and mh.call_count == 3:
                 return self.pass_result(actual=f"retries={mh.call_count}, error={res.error}")
@@ -958,8 +958,8 @@ class TCSuiteRunner:
         )
 
         def tc49() -> Dict[str, Any]:
-            supported = tp.extract_variables("≪会社名≫")
-            unsupported = tp.extract_variables("«会社名»")
+            supported = tp.extract_variables("«会社名»")
+            unsupported = tp.extract_variables("≪会社名≫")
             if "会社名" in supported and "会社名" not in unsupported:
                 return self.pass_result(actual=f"supported={supported}, unsupported={unsupported}")
             return self.fail_result(actual=f"supported={supported}, unsupported={unsupported}")
@@ -983,12 +983,12 @@ class TCSuiteRunner:
             "TC-51",
             "Default template should be available.",
             lambda: self.pass_result(actual="default template loaded")
-            if "≪会社名≫" in get_default_template()
+            if "«会社名»" in get_default_template()
             else self.fail_result(actual="Default template does not include expected placeholder."),
         )
 
         def tc52() -> Dict[str, Any]:
-            content = "≪会社名≫ {{担当者名}}"
+            content = "«会社名» {{担当者名}}"
             rendered = tp.render(content, {"会社名": "A社", "担当者名": "田中"})
             if rendered.success and "A社" in rendered.content and "田中" in rendered.content:
                 return self.pass_result(actual=rendered.content)
@@ -1006,7 +1006,7 @@ class TCSuiteRunner:
             lambda: self.pass_result(actual=res.content)
             if (
                 (res := tp.create_email_body(
-                    template_content="≪会社名≫ ≪担当者名≫ ≪製品名≫ ≪製品特徴≫ ≪製品URL≫",
+                    template_content="«会社名» «担当者名» «製品名» «製品特徴» «製品URL»",
                     company_name="A社",
                     contact_name="田中 太郎",
                     product_name="製品X",
@@ -1024,7 +1024,7 @@ class TCSuiteRunner:
             "TC-54",
             "Strict mode should fail when undefined variable exists.",
             lambda: self.pass_result(actual=f"missing={res.missing_variables}")
-            if not (res := tp.render("≪会社名≫ ≪未定義≫", {"会社名": "A社"}, strict=True)).success
+            if not (res := tp.render("«会社名» «未定義»", {"会社名": "A社"}, strict=True)).success
             else self.fail_result(actual="Strict mode unexpectedly succeeded."),
         )
 

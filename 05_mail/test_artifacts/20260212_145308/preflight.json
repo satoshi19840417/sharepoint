@@ -1,0 +1,32 @@
+{
+  "run_id": "20260212_145308",
+  "timestamp": "2026-02-12T14:53:09.062936",
+  "python_executable": "C:\\Python313\\python.exe",
+  "python_version": "3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cwd": "C:\\Users\\千賀聡志\\OneDrive - セルジェンテック株式会社\\sharepointリスト化",
+  "stage": "all",
+  "mail_scope": "self",
+  "report": "markdown",
+  "dependencies": {
+    "win32com.client": "OK",
+    "email_validator": "OK",
+    "chardet": "OK",
+    "cryptography": "OK",
+    "keyring": "OK",
+    "docx": "OK",
+    "requests": "OK"
+  },
+  "config_snapshot": {
+    "dry_run": false,
+    "test_mode": true,
+    "test_email": "sengas@cellgentech.com",
+    "max_recipients": 50,
+    "confirmation_threshold": 5
+  },
+  "outlook": {
+    "connected": true,
+    "message": "Outlook接続OK"
+  },
+  "key_exists": true
+}
