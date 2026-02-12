@@ -1,0 +1,20 @@
+{
+  "execution_id": "42a300c3-756d-4a5c-95d0-66aa14c58408",
+  "start_time": "2026-02-12T17:29:25.385061",
+  "end_time": "2026-02-12T17:29:25.385085",
+  "operator": "千賀聡志",
+  "input_file": "tc92.csv",
+  "total_count": 1,
+  "success_count": 1,
+  "failure_count": 0,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjY9l0VdF2q3ycUvr4pwxJyVQCNXbC4DzBmiqfXxh5fiPbgZu3PQxW9dV-Axo_UgNo18Z1XcPukYJb3c_q3O7qoBRrA==",
+      "company_name": "A社",
+      "success": true,
+      "message_id": "MID-92",
+      "sent_at": "2026-02-12T17:29:25.385077"
+    }
+  ],
+  "errors": []
+}

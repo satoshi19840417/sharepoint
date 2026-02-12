@@ -1,0 +1,39 @@
+{
+  "execution_id": "49156c60-cab3-4372-b433-4d6d97c33065",
+  "start_time": "2026-02-12T17:29:24.424000",
+  "end_time": "2026-02-12T17:29:24.426659",
+  "operator": "千賀聡志",
+  "input_file": "tc90.csv",
+  "total_count": 2,
+  "success_count": 1,
+  "failure_count": 1,
+  "details": [
+    {
+      "email_enc": "enc:v1:gAAAAABpjY9kKgtvhnh8okIYWGDT8aNIE7KjNWkCXGXDckI-y8C5YEhJZ5ZCRa-o4gyyRTLrnypApgdnuwmH7HVg3alhxVB6NQ==",
+      "company_name": "Company1",
+      "success": true,
+      "message_id": "MID-DUP",
+      "sent_at": "2026-02-12T17:29:24.424038"
+    },
+    {
+      "email_enc": "enc:v1:gAAAAABpjY9kG6Rx7XA6X-eHCUWt1b50p28322gWhGZe4vClj_seGTQN-Brti_Otoou3wkVrqabTfXpDvFEiTzU-ASv9Br6C2Q==",
+      "company_name": "Company2",
+      "success": false,
+      "message_id": "",
+      "sent_at": ""
+    }
+  ],
+  "errors": [
+    {
+      "email_masked": "***@example.com",
+      "error": "同一実行内の重複送信をスキップしました: ***@example.com"
+    }
+  ],
+  "product_info": {
+    "product_name": "P",
+    "maker_name": "",
+    "maker_code": "",
+    "quantity": "",
+    "product_url": "https://example.com"
+  }
+}
