@@ -255,6 +255,7 @@ class QuoteRequestSkill:
         quantity: str = "",
         input_file: str = "",
         confirm_rerun_callback: Optional[Callable[[ContactRecord, Dict[str, Any]], bool]] = None,
+        confirm_bulk_send_callback: Optional[Callable[[int], bool]] = None,
     ) -> Dict[str, Any]:
         """
         一斉送信を実行する。
@@ -274,7 +275,52 @@ class QuoteRequestSkill:
         confirmation_threshold = self.config.get("confirmation_threshold", 5)
         if len(records) >= confirmation_threshold:
             print(f"警告: {len(records)}件のメールを送信します。")
-            # 実際の運用ではここでユーザー確認を挟む
+            if confirm_bulk_send_callback is not None:
+                try:
+                    confirmed = bool(confirm_bulk_send_callback(len(records)))
+                except Exception as callback_error:
+                    callback_message = f"送信前確認コールバックエラー: {callback_error}"
+                    return {
+                        "success": False,
+                        "error": callback_message,
+                        "total": len(records),
+                        "attempted_count": 0,
+                        "success_count": 0,
+                        "failure_count": 0,
+                        "skipped_duplicate_count": 0,
+                        "skipped_rerun_count": 0,
+                        "audit_log_path": "",
+                        "sent_list_path": "",
+                        "unsent_list_path": "",
+                        "screen_output": "",
+                        "warning": callback_message,
+                        "warnings": [callback_message],
+                        "results": [],
+                        "confirmation_required": True,
+                    }
+
+                if not confirmed:
+                    cancel_message = (
+                        f"{len(records)}件の送信は確認によりキャンセルされました。"
+                    )
+                    return {
+                        "success": False,
+                        "error": cancel_message,
+                        "total": len(records),
+                        "attempted_count": 0,
+                        "success_count": 0,
+                        "failure_count": 0,
+                        "skipped_duplicate_count": 0,
+                        "skipped_rerun_count": 0,
+                        "audit_log_path": "",
+                        "sent_list_path": "",
+                        "unsent_list_path": "",
+                        "screen_output": "",
+                        "warning": cancel_message,
+                        "warnings": [cancel_message],
+                        "results": [],
+                        "confirmation_required": True,
+                    }
 
         results = []
         warnings: List[str] = []

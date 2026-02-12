@@ -115,8 +115,20 @@ class CSVHandler:
         reader = csv.DictReader(lines)
         headers = reader.fieldnames or []
 
+        # 暗号化列チェック
+        encrypted_columns = self._detect_encrypted_columns(headers, lines[1] if len(lines) > 1 else "")
+        if encrypted_columns.get("errors"):
+            result.errors.extend(encrypted_columns["errors"])
+            return result
+
+        # 復号で生える元列名も列マップ判定対象に含める
+        virtual_headers = list(headers)
+        for original_name in encrypted_columns.get("columns", {}).values():
+            if original_name not in virtual_headers:
+                virtual_headers.append(original_name)
+
         # 列名正規化マップ作成
-        column_map = self._create_column_map(headers)
+        column_map = self._create_column_map(virtual_headers)
 
         # 必須列チェック
         if "会社名" not in column_map:
@@ -125,12 +137,6 @@ class CSVHandler:
             result.errors.append("必須列 'メールアドレス' が見つかりません。")
 
         if result.errors:
-            return result
-
-        # 暗号化列チェック
-        encrypted_columns = self._detect_encrypted_columns(headers, lines[1] if len(lines) > 1 else "")
-        if encrypted_columns.get("errors"):
-            result.errors.extend(encrypted_columns["errors"])
             return result
 
         # レコード読み込み

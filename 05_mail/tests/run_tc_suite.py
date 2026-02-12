@@ -60,7 +60,6 @@ from scripts.url_validator import URLValidator
 
 ALL_TC_IDS = [f"TC-{i:02d}" for i in range(1, 93)]
 STAGE2_TC_IDS = {"TC-56", "TC-58", "TC-59", "TC-63"}
-KNOWN_GAP_IDS = {"TC-61", "TC-62", "TC-86"}
 VALID_STATUSES = {"PASS", "FAIL", "BLOCKED", "PASS_WITH_GAP"}
 
 
@@ -1128,6 +1127,7 @@ class TCSuiteRunner:
         def tc61() -> Dict[str, Any]:
             skill = self.make_skill(dry_run=True, test_mode=True)
             records = self.base_records(count=5)
+            confirm_mock = mock.Mock(return_value=False)
             with mock.patch.object(
                 skill.mail_sender,
                 "send_mail",
@@ -1138,10 +1138,8 @@ class TCSuiteRunner:
                     message_id="DRYRUN:MOCK",
                     sent_at=dt.datetime.now(),
                 ),
-            ):
-                out = io.StringIO()
-                with contextlib.redirect_stdout(out):
-                    skill.send_bulk(
+            ) as send_mail_mock:
+                result = skill.send_bulk(
                         records=records,
                         subject="TC61",
                         template_content="≪会社名≫",
@@ -1149,15 +1147,19 @@ class TCSuiteRunner:
                         product_features="F",
                         product_url="https://example.com",
                         input_file="tc61.csv",
+                        confirm_bulk_send_callback=confirm_mock,
                     )
-                printed = out.getvalue()
 
-            if "警告:" in printed:
-                return self.gap_pass_result(
-                    actual="Threshold warning is print() only (no dialog).",
-                    notes="Known gap: requirement asks dialog, implementation uses print warning.",
+            if (
+                confirm_mock.call_count == 1
+                and send_mail_mock.call_count == 0
+                and result.get("confirmation_required") is True
+                and result.get("attempted_count") == 0
+            ):
+                return self.pass_result(
+                    actual=f"confirmed={confirm_mock.call_args.args[0]}, send_calls={send_mail_mock.call_count}",
                 )
-            return self.fail_result(actual="Threshold warning print not emitted.")
+            return self.fail_result(actual=f"result={result}, send_calls={send_mail_mock.call_count}")
 
         self.run_case(
             "TC-61",
@@ -1168,6 +1170,7 @@ class TCSuiteRunner:
         def tc62() -> Dict[str, Any]:
             skill = self.make_skill(dry_run=True, test_mode=True)
             records = self.base_records(count=4)
+            confirm_mock = mock.Mock(return_value=False)
             with mock.patch.object(
                 skill.mail_sender,
                 "send_mail",
@@ -1178,10 +1181,8 @@ class TCSuiteRunner:
                     message_id="DRYRUN:MOCK",
                     sent_at=dt.datetime.now(),
                 ),
-            ):
-                out = io.StringIO()
-                with contextlib.redirect_stdout(out):
-                    skill.send_bulk(
+            ) as send_mail_mock:
+                result = skill.send_bulk(
                         records=records,
                         subject="TC62",
                         template_content="≪会社名≫",
@@ -1189,15 +1190,18 @@ class TCSuiteRunner:
                         product_features="F",
                         product_url="https://example.com",
                         input_file="tc62.csv",
+                        confirm_bulk_send_callback=confirm_mock,
                     )
-                printed = out.getvalue()
 
-            if "警告:" not in printed:
-                return self.gap_pass_result(
-                    actual="No warning under threshold; behavior verified as print-based implementation.",
-                    notes="Known gap context paired with TC-61.",
+            if (
+                confirm_mock.call_count == 0
+                and send_mail_mock.call_count == len(records)
+                and result.get("success") is True
+            ):
+                return self.pass_result(
+                    actual=f"confirm_calls={confirm_mock.call_count}, send_calls={send_mail_mock.call_count}",
                 )
-            return self.fail_result(actual=f"Unexpected warning output: {printed}")
+            return self.fail_result(actual=f"result={result}, send_calls={send_mail_mock.call_count}")
 
         self.run_case(
             "TC-62",
@@ -1584,25 +1588,37 @@ class TCSuiteRunner:
         )
 
         def tc86() -> Dict[str, Any]:
-            h = CSVHandler()
-            tc86_file = self.inputs_dir / "tc86_unsent_rerun.csv"
-            self.write_csv(
-                tc86_file,
-                ["会社名", "メールアドレス_enc"],
-                [["A社", "enc:v1:dummy"]],
-            )
-            res = h.load_csv(str(tc86_file))
-            if any("必須列 'メールアドレス'" in e for e in res.errors):
-                return self.gap_pass_result(
-                    actual=f"errors={res.errors}",
-                    evidence=[str(tc86_file)],
-                    notes="Known gap: required-column check runs before encrypted-column recovery.",
+            with self.patched_keyring():
+                manager = EncryptionManager(f"tc86-{uuid.uuid4()}")
+                manager.generate_key()
+                encrypted_email = manager.encrypt("a86@example.com")
+                h = CSVHandler(manager)
+
+                tc86_file = self.inputs_dir / "tc86_unsent_rerun.csv"
+                self.write_csv(
+                    tc86_file,
+                    ["会社名", "メールアドレス_enc"],
+                    [["A社", encrypted_email]],
                 )
-            return self.fail_result(actual=f"errors={res.errors}", evidence=[str(tc86_file)])
+                res = h.load_csv(str(tc86_file))
+
+                if (
+                    res.errors == []
+                    and len(res.records) == 1
+                    and res.records[0].email == "a86@example.com"
+                ):
+                    return self.pass_result(
+                        actual=f"records={len(res.records)}, email={res.records[0].email}",
+                        evidence=[str(tc86_file)],
+                    )
+                return self.fail_result(
+                    actual=f"errors={res.errors}, records={len(res.records)}",
+                    evidence=[str(tc86_file)],
+                )
 
         self.run_case(
             "TC-86",
-            "Unsent-list rerun with *_enc should work (known implementation gap).",
+            "Unsent-list rerun with *_enc should work.",
             tc86,
         )
 
