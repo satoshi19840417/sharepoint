@@ -1,11 +1,12 @@
 # Documents 目次
 
-## 🚧 現在のタスク（2026/02/09更新）
+## 🚧 現在のタスク（2026/02/10更新）
 
 | タスク | ステータス | 詳細 |
 |--------|-----------|------|
-| **見積依頼スキル 運用開始前チェック** | 🔄 進行中（依存導入・ドライラン完了） | [要件定義書](../05_mail/見積依頼スキル_要件定義書.md) |
-| **Phase 5 テンプレート作成** | 🔄 進行中 | [タスク管理表](./01_Phases/Phase5_送付フロー/Phase5_テンプレート作成タスク.md) |
+| **見積依頼スキル** | ✅ テスト送信完了（本番切替待ち） | [要件定義書](../05_mail/見積依頼スキル_要件定義書.md) |
+| **Phase 5 テンプレート作成** | ✅ 完了 | [タスク管理表](./01_Phases/Phase5_送付フロー/Phase5_テンプレート作成タスク.md) |
+| **Phase 5 列追加・業者マスタ** | 🔄 スクリプト作成済み（実行待ち） | `02_Scripts/AddPhase5Columns.ps1` |
 
 > 💡 「次のタスクを確認して実行」と依頼されたら、上記のタスク管理表を参照してください。
 
@@ -65,6 +66,9 @@
 | ファイル | 説明 |
 |---------|------|
 | [CGT発注書_テンプレート.xlsx](./02_Templates/CGT発注書_テンプレート.xlsx) | 発注書のテンプレート |
+| [発注書テンプレート.docx](./02_Templates/発注書テンプレート.docx) | Phase5 発注書Word（Content Control） |
+| [請書テンプレート.xlsx](./02_Templates/請書テンプレート.xlsx) | Phase5 請書Excel（シート保護付き） |
+| [vendor_master_template.csv](./02_Templates/vendor_master_template.csv) | Phase5 業者マスタCSVテンプレート |
 | [物品管理リスト_テンプレート.xlsx](./02_Templates/物品管理リスト_テンプレート.xlsx) | 物品管理リストのひな形 |
 | [inventory_template.csv](./02_Templates/inventory_template.csv) | 在庫データ取込用CSV |
 

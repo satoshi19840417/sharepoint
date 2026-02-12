@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(python test_send.py:*)",
+      "Bash(git -C \"c:\\\\Users\\\\千賀聡志\\\\OneDrive - セルジェンテック株式会社\\\\sharepointリスト化\" log --oneline -20)"
+    ]
+  }
+}
