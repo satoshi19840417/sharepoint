@@ -5,7 +5,17 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(python test_send.py:*)",
-      "Bash(git -C \"c:\\\\Users\\\\千賀聡志\\\\OneDrive - セルジェンテック株式会社\\\\sharepointリスト化\" log --oneline -20)"
+      "Bash(git -C \"c:\\\\Users\\\\千賀聡志\\\\OneDrive - セルジェンテック株式会社\\\\sharepointリスト化\" log --oneline -20)",
+      "Bash(python -c:*)",
+      "Bash(pip install:*)",
+      "Bash(where:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(C:\\\\Python313\\\\python.exe -m pip install:*)",
+      "Bash(\"/c/Python313/python.exe\" -m pip install openpyxl python-pptx Pillow)",
+      "Bash(\"/c/Python313/python.exe\" -c \"import openpyxl, pptx, PIL; print\\(''All libraries installed successfully''\\)\")",
+      "Bash(\"/c/Python313/python.exe\" scripts/parse_manual.py)",
+      "Bash(\"/c/Python313/python.exe\" scripts/generate_ppt.py)",
+      "Bash(\"/c/Python313/python.exe\" scripts/convert_manual_to_ppt.py)"
     ]
   }
 }
