@@ -1,0 +1,12 @@
+{
+  "default_output_dir": "./output",
+  "logo_path": "",
+  "color_scheme": {
+    "primary": [0, 102, 204],
+    "accent": [51, 153, 255],
+    "dark": [0, 51, 102],
+    "light_bg": [240, 248, 255],
+    "gray": [100, 100, 100]
+  }
+}
+
