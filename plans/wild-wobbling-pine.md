@@ -1,288 +1,252 @@
-# マニュアルスライド化スキル作成計画
+# マニュアルスライド化スキル作成計画（再レビュー反映版）
 
 ## Context
 
-ユーザーからの要望により、ExcelマニュアルをPowerPointスライドに変換する機能を「マニュアルスライド化スキル」としてスキル化します。
+ユーザー要望に基づき、ExcelマニュアルをPowerPointへ変換する機能を「マニュアルスライド化スキル」として整備する。
+本計画は 2026-02-13 の再レビュー指摘（重大2件・中3件）を反映した決定版である。
 
 ### 背景
-- 既に相見積操作マニュアルのPowerPoint変換機能を実装済み
-- CellGenTechブランドに最適化されたデザインを適用
-- この機能を再利用可能なスキルとして整備
+- 既存の変換処理は `05_mail/scripts/convert_manual_to_ppt.py` を起点に実装済み
+- 既存処理は `05_mail/scripts/parse_manual.py` と `05_mail/scripts/generate_ppt.py` に依存
+- 今回はスキル化しつつ、既存利用者を壊さない互換運用が必要
 
 ### 要件
-- **スキル名**: マニュアルスライド化スキル
-- **使用方法**: 簡易実行（Excelファイルパス指定のみ）+ 対話形式（ステップバイステップ）
-- **配置場所**: `skills/manual-to-ppt/` ディレクトリに独立配置
-- **機能**: Excelマニュアル（テキスト + 画像）→ PowerPointスライド（CellGenTechデザイン）
-
-**変換対象:**
-- ファイル: `05_mail\相見積操作マニュアル.xlsx`
-- 内容: 見積依頼の作成と送信に関する操作手順
-- 構成: 1シートに全体がまとまっている
-- 画像: マニュアル内にスクリーンショットが含まれている
-
-**スライド要件:**
-- スタイル: スクリーンショット中心の視覚的なデザイン
-- 含める要素: 画面イメージ（スクリーンショット）を重視
-- ページ数: 必要な情報が伝わる量（制限なし）
+- スキル名: マニュアルスライド化スキル
+- 正式実行方式: `python skills/manual-to-ppt/main.py <excel_path>`
+- 実行モード: 簡易実行 + 対話形式
+- 配置先: `skills/manual-to-ppt/`
+- 変換対象: Excelマニュアル（テキスト + 埋め込み画像）
+- 出力: CellGenTechデザインのPowerPoint
 
 ---
 
 ## Implementation Plan
 
-### ステップ1: スキルディレクトリ構造の作成
+### ステップ1: スキル構成のパッケージ化
 
-`skills/manual-to-ppt/` ディレクトリに以下の構造を作成：
+`skills/manual-to-ppt/` は `manual_to_ppt` パッケージを中心に構成する。
 
-```
+```text
 skills/manual-to-ppt/
-├── SKILL.md                    # スキルドキュメント
-├── main.py                     # メインエントリーポイント（対話形式）
-├── scripts/
-│   ├── parse_manual.py        # Excelマニュアル解析（既存コードを移動）
-│   ├── generate_ppt.py        # PowerPoint生成（既存コードを移動）
-│   └── converter.py           # 変換ロジック（既存のconvert_manual_to_ppt.pyを改名）
+├── SKILL.md
+├── main.py
+├── requirements.txt
 ├── config/
-│   └── config_template.json   # 設定テンプレート（ロゴパス、カラースキームなど）
-└── requirements.txt           # 必要なライブラリ
+│   └── config_template.json
+└── manual_to_ppt/
+    ├── __init__.py
+    ├── parse_manual.py
+    ├── generate_ppt.py
+    ├── converter.py
+    └── config_loader.py
 ```
 
-**必要なライブラリ:**
-- `openpyxl`: Excelファイルの読み取り、画像の抽出
-- `python-pptx`: PowerPointファイルの作成
-- `Pillow`: 画像処理
+実装責務:
+- `main.py`: 正式CLI入口（引数処理、対話入力、終了コード制御）
+- `manual_to_ppt/converter.py`: 変換フロー本体
+- `manual_to_ppt/config_loader.py`: 設定読込と優先順位解決
 
-### ステップ2: 既存スクリプトの整理と移動
+### ステップ2: 共通モジュール化 + 互換ラッパー化
 
-`05_mail/scripts/` から必要なスクリプトを `skills/manual-to-ppt/scripts/` に移動・整理：
+方針を「移動・改名」から「共通化 + 互換維持」へ変更する。
 
-1. **parse_manual.py** - そのまま移動
-   - Excelマニュアル解析クラス（ExcelManualParser）
-   - テキスト・画像の抽出機能
+1. 共通実装は `skills/manual-to-ppt/manual_to_ppt/` に集約する。
+2. 既存導線 `05_mail/scripts/` は削除しない。
+3. `05_mail/scripts/convert_manual_to_ppt.py` は薄いラッパーとして保持し、以下を維持する。
+- 旧CLI実行: `python 05_mail/scripts/convert_manual_to_ppt.py`
+- 旧import: `from convert_manual_to_ppt import convert_excel_to_ppt`
+4. 必要に応じて `05_mail/scripts/parse_manual.py` と `05_mail/scripts/generate_ppt.py` も薄いラッパー化し、既存import互換を維持する。
 
-2. **generate_ppt.py** - そのまま移動
-   - PowerPoint生成クラス（PowerPointGenerator）
-   - CellGenTechデザイン適用済み
-   - ロゴ配置、カラースキーム設定
+### ステップ3: SKILL.md の整備
 
-3. **convert_manual_to_ppt.py** → **converter.py** に改名
-   - 統合変換ロジック
-   - ステップ情報抽出
-   - 画像マッチング機能
+`skills/manual-to-ppt/SKILL.md` に以下を明記する。
+- 概要と対象入力
+- 正式コマンド（`main.py` 固定）
+- 対話モードの使い方
+- 設定ファイル利用方法（`--config`）
+- 旧導線互換の扱い（非推奨だが維持）
 
-### ステップ3: SKILL.md（スキルドキュメント）の作成
+### ステップ4: main.py（正式エントリーポイント）
 
-`skills/manual-to-ppt/SKILL.md` を作成：
+`main.py` は唯一の正式入口とする。
 
-**記載内容:**
-1. **概要**: Excelマニュアルを見やすいPowerPointスライドに変換するスキル
-2. **使用方法**:
-   - 簡易実行: `Excelファイルパスを指定してマニュアルスライド化スキルを実行`
-   - 対話形式: 段階的にファイルパスやオプションを入力
-3. **入力ファイル**: Excel形式（.xlsx）、画像埋め込み対応
-4. **出力**: PowerPointファイル（CellGenTechデザイン、ロゴ付き）
-5. **設定オプション**: ロゴパス、カラースキーム、出力先
-6. **サンプル**: 使用例のコマンド
+必須仕様:
+1. 正式起動:
+- `python skills/manual-to-ppt/main.py <excel_path>`
+2. 対話起動:
+- `python skills/manual-to-ppt/main.py --interactive`
+3. サポート引数:
+- `--output <pptx>`
+- `--output-dir <dir>`
+- `--logo <path>`
+- `--config <json>`
+- `--interactive`
+4. エラー制御:
+- 入力/設定不備は終了コード `2`
+- 変換処理失敗は終了コード `1`
+- 成功時は終了コード `0`
 
-### ステップ4: main.py（メインエントリーポイント）の作成
+注記:
+- `converter.py` の直実行はサポート外と明記する。
 
-`skills/manual-to-ppt/main.py` を作成：
+### ステップ5: config_template.json の読込・適用フロー定義
 
-**機能:**
-1. **簡易実行モード**:
-   - コマンドライン引数でExcelファイルパスを受け取る
-   - デフォルト設定（ロゴ自動検出、出力先同じディレクトリ）で実行
+`config/config_template.json` は雛形として作成し、実運用では `--config` または既定配置設定を読む。
 
-2. **対話形式モード**:
-   - ユーザーに質問しながらパラメータを収集
-   - Excelファイルパス入力
-   - ロゴファイルパス入力（オプション、デフォルトはCellGenTechロゴ）
-   - 出力ファイルパス入力（オプション）
-   - タイトル・サブタイトルのカスタマイズ（オプション）
+優先順位（固定）:
+- `output_path`: `--output` > `--output-dir` > `config.default_output_dir` > 入力Excelと同じディレクトリ
+- `logo_path`: `--logo` > `config.logo_path` > 自動探索 > なし
+- `color_scheme`: `config.color_scheme` > 内部デフォルト
 
-3. **エラーハンドリング**:
-   - ファイル存在チェック
-   - 必要なライブラリのインストール確認
-   - わかりやすいエラーメッセージ
+フォールバック規則:
+- config未指定: デフォルト値で継続
+- config不正JSON/型不正: エラー終了（終了コード `2`）
 
-### ステップ5: config_template.json（設定テンプレート）の作成
+### ステップ6: requirements.txt の明確化
 
-`skills/manual-to-ppt/config/config_template.json` を作成：
+`skills/manual-to-ppt/requirements.txt`:
 
-**設定項目:**
-```json
-{
-  "logo_path": "CellGenTech_Logo_20221203_Blue_Horizontal.png",
-  "color_scheme": {
-    "primary": "#0066CC",
-    "accent": "#3399FF",
-    "dark": "#003366",
-    "light_bg": "#F0F8FF"
-  },
-  "slide_settings": {
-    "width_inches": 10,
-    "height_inches": 7.5,
-    "logo_height_inches": 0.4
-  },
-  "default_output_dir": "./output"
-}
-```
-
-**用途:**
-- カラースキームのカスタマイズ
-- ロゴのデフォルトパス設定
-- スライドサイズの調整
-
-### ステップ6: requirements.txt の作成
-
-`skills/manual-to-ppt/requirements.txt` を作成：
-
-```
+```text
 openpyxl>=3.1.0
 python-pptx>=1.0.0
 Pillow>=10.0.0
 ```
 
-**目的:**
-- スキル実行に必要なライブラリを明示
-- `pip install -r requirements.txt` で一括インストール可能
+### ステップ7: import 方針の固定
 
-### ステップ7: スクリプトの統合とテスト
+`ModuleNotFoundError` 回避のため、import規約を固定する。
 
-1. **インポートパスの修正**:
-   - `converter.py` 内のインポート文を修正
-   - `from parse_manual import ...` → `from scripts.parse_manual import ...`
-   - `from generate_ppt import ...` → `from scripts.generate_ppt import ...`
+- `main.py` / `converter.py` は `manual_to_ppt` 絶対importを使用
+- `from scripts.parse_manual ...` / `from scripts.generate_ppt ...` は新構成側で使用しない
+- 実行保証範囲は `main.py` 起動時に限定して明記
 
-2. **main.py での統合**:
-   - `converter.py` の機能を呼び出し
-   - コマンドライン引数のパース
-   - 対話形式のユーザー入力処理
+### ステップ8: ドキュメント整備
 
-3. **動作確認**:
-   - サンプルExcelファイルで変換テスト
-   - 簡易実行モードと対話形式モードの両方をテスト
+- `SKILL.md` にトラブルシューティングを追加
+- 使用例を正式コマンドに統一
+- 互換導線は「維持対象だが推奨入口ではない」と明記
 
-### ステップ8: ドキュメント整備とサンプル作成
+### ステップ9: レビュー容易化のための改訂履歴追記
 
-1. **SKILL.md の完成**:
-   - 使用例を追加
-   - トラブルシューティングセクション
-   - FAQ（よくある質問）
+本文末に `## Revision Scope (2026-02-13 再レビュー反映)` を追加し、今回変更した章を列挙する。
 
-2. **README.md の作成**（オプション）:
-   - スキルの詳細な説明
-   - インストール手順
-   - 開発者向けの情報
+---
 
-3. **サンプルファイルの配置**:
-   - サンプルExcelマニュアル（必要に応じて）
-   - サンプル出力PowerPoint
+## Public APIs / Interfaces
 
-4. **使用例のドキュメント**:
-   ```bash
-   # 簡易実行
-   python skills/manual-to-ppt/main.py path/to/manual.xlsx
+### 正式CLI
 
-   # 対話形式
-   python skills/manual-to-ppt/main.py --interactive
-   ```
+```bash
+python skills/manual-to-ppt/main.py <excel_path> [--output <pptx>] [--output-dir <dir>] [--logo <path>] [--config <json>] [--interactive]
+```
+
+### 終了コード
+- `0`: 成功
+- `1`: 変換処理失敗
+- `2`: 入力/設定バリデーション失敗
+
+### 互換保証
+- 旧CLIは継続実行可能: `python 05_mail/scripts/convert_manual_to_ppt.py`
+- 旧importは継続利用可能: `from convert_manual_to_ppt import convert_excel_to_ppt`
 
 ---
 
 ## Critical Files
 
-**既存ファイル（移動元）:**
-- `05_mail/scripts/parse_manual.py` - Excelマニュアル解析スクリプト
-- `05_mail/scripts/generate_ppt.py` - PowerPoint生成スクリプト
-- `05_mail/scripts/convert_manual_to_ppt.py` - 統合実行スクリプト
-- `05_mail/CellGenTech_Logo_20221203_Blue_Horizontal.png` - CellGenTechロゴ
+### 新規作成
+- `skills/manual-to-ppt/SKILL.md`
+- `skills/manual-to-ppt/main.py`
+- `skills/manual-to-ppt/requirements.txt`
+- `skills/manual-to-ppt/config/config_template.json`
+- `skills/manual-to-ppt/manual_to_ppt/__init__.py`
+- `skills/manual-to-ppt/manual_to_ppt/parse_manual.py`
+- `skills/manual-to-ppt/manual_to_ppt/generate_ppt.py`
+- `skills/manual-to-ppt/manual_to_ppt/converter.py`
+- `skills/manual-to-ppt/manual_to_ppt/config_loader.py`
 
-**作成するファイル（新規）:**
-- `skills/manual-to-ppt/SKILL.md` - スキルドキュメント
-- `skills/manual-to-ppt/main.py` - メインエントリーポイント
-- `skills/manual-to-ppt/requirements.txt` - 必要ライブラリリスト
-- `skills/manual-to-ppt/config/config_template.json` - 設定テンプレート
+### 互換ラッパーとして更新
+- `05_mail/scripts/convert_manual_to_ppt.py`
+- `05_mail/scripts/parse_manual.py`（必要時）
+- `05_mail/scripts/generate_ppt.py`（必要時）
 
-**移動先ファイル:**
-- `skills/manual-to-ppt/scripts/parse_manual.py` - 解析スクリプト（移動）
-- `skills/manual-to-ppt/scripts/generate_ppt.py` - 生成スクリプト（移動）
-- `skills/manual-to-ppt/scripts/converter.py` - 変換スクリプト（convert_manual_to_ppt.pyを改名）
-
-**参考ファイル:**
-- `04_AI_Study_Promo/skills/generate-presentation/SKILL.md` - スキル構造の参考
-- `05_mail/SKILL.md` - 見積依頼スキルの参考
+### 既存参照のみ
+- `05_mail/相見積操作マニュアル.xlsx`
+- `05_mail/CellGenTech_Logo_20221203_Blue_Horizontal.png`
 
 ---
 
 ## Verification Plan
 
-### 1. ライブラリのインストール確認
-```bash
-cd skills/manual-to-ppt
-pip install -r requirements.txt
-python -c "import openpyxl, pptx, PIL; print('All libraries installed successfully')"
-```
+### 1. 正常系: 変換成功
 
-### 2. 簡易実行モードのテスト
 ```bash
 python skills/manual-to-ppt/main.py 05_mail/相見積操作マニュアル.xlsx
 ```
-**期待される動作:**
-- Excelファイルを読み込み
-- 画像を抽出
-- PowerPointファイルを生成（同じディレクトリに出力）
-- CellGenTechロゴを自動検出して配置
 
-### 3. 対話形式モードのテスト
+合格条件:
+- 終了コード `0`
+- `steps_count > 0`
+- `slides_count == steps_count + 1`
+- 出力 `.pptx` が存在
+- `steps_count` / `slides_count` は `main.py` のサマリーJSONログ（例: `{"steps_count":3,"slides_count":4}`）を算出元として判定する
+
+### 2. 異常系: 入力ファイル不存在
+
 ```bash
-python skills/manual-to-ppt/main.py --interactive
+python skills/manual-to-ppt/main.py 05_mail/not_found.xlsx
 ```
-**期待される動作:**
-- Excelファイルパスを入力
-- ロゴファイルパス入力（オプション、デフォルト表示）
-- 出力先パス入力（オプション）
-- タイトル・サブタイトル入力（オプション）
-- 変換実行
 
-### 4. 生成されたPowerPointの確認
-- タイトルスライド: CellGenTechブランドデザイン適用
-- 各ステップスライド: 青のヘッダー、スクリーンショット、ロゴ配置
-- カラースキーム: CellGenTechブルー (#0066CC) 統一
-- レイアウト: 統一感のあるデザイン
+合格条件:
+- 終了コード `2`
+- 入力ファイル不正を示すエラーメッセージが出力される
 
-### 5. エラーハンドリングの確認
-- 存在しないファイルパスを指定した場合のエラーメッセージ
-- 必要なライブラリがない場合のエラーメッセージ
-- 画像が含まれないExcelファイルの処理
+### 3. 異常系: config不正
+
+```bash
+python skills/manual-to-ppt/main.py 05_mail/相見積操作マニュアル.xlsx --config skills/manual-to-ppt/config/invalid.json
+```
+
+合格条件:
+- 終了コード `2`
+- 設定読込失敗を示すエラーメッセージが出力される
+
+### 4. 回帰系: 旧CLI + 旧import互換
+
+```bash
+python 05_mail/scripts/convert_manual_to_ppt.py
+cd 05_mail/scripts && python -c "from convert_manual_to_ppt import convert_excel_to_ppt; print(callable(convert_excel_to_ppt))"
+```
+
+合格条件:
+- `ModuleNotFoundError` が発生しない
+- 旧CLI実行が継続可能
+- 旧importが成功する
 
 ---
 
 ## Notes
 
-1. **スキルの再利用性**:
-   - 汎用的なマニュアル変換機能として設計
-   - CellGenTechブランド以外にも適用可能（config.jsonで設定変更）
+1. 既存利用者保護を優先し、`05_mail/scripts` 導線は廃止しない。
+2. 新規開発・運用の入口は `skills/manual-to-ppt/main.py` に一本化する。
+3. デフォルト出力先は「入力Excelと同一ディレクトリ」で統一する。
+4. 設定優先順位は `CLI > config > default` を厳守する。
+5. 検証は機械判定を必須化し、目視確認は補助扱いとする。
 
-2. **既存コードの活用**:
-   - `05_mail/scripts/` の既存スクリプトを最大限活用
-   - 大幅な書き換えは不要、構造の整理とラッパーの追加のみ
+---
 
-3. **エンコーディング**:
-   - Windows環境でのUnicode対応（既存スクリプトで実装済み）
-   - 日本語ファイル名・テキストの完全サポート
+## Acceptance Criteria
 
-4. **ロゴの自動検出**:
-   - デフォルトで `CellGenTech_Logo_20221203_Blue_Horizontal.png` を検索
-   - プロジェクトルート、スキルディレクトリ、親ディレクトリを順に探索
+- 重大2件・中3件に対応する仕様が本文へ明示されている。
+- 旧記述の矛盾（移動前提と互換維持の同居、import条件未定義、設定優先順位未定義）が解消されている。
+- 実装者が本計画のみで追加判断なく着手できる。
 
-5. **拡張性**:
-   - 将来的にカラースキームのプリセット追加可能
-   - テンプレート機能の追加も検討可能（異なるレイアウトパターン）
+---
 
-6. **互換性**:
-   - 既存の `05_mail/scripts/convert_manual_to_ppt.py` も保持
-   - スキル化後も従来の方法で実行可能
+## Assumptions and Defaults
+
+- 既存導線互換（旧CLI + 旧import）は維持する。
+- config指定は任意で、未指定時はフォールバックで実行可能とする。
+- 本計画の対象は計画文書更新であり、コード変更は次フェーズとする。
 
 ---
 
@@ -290,20 +254,32 @@ python skills/manual-to-ppt/main.py --interactive
 
 ### スキル化の流れ
 
-1. **ディレクトリ構造の作成**: `skills/manual-to-ppt/` に必要なフォルダを作成
-2. **既存スクリプトの移動**: `05_mail/scripts/` から3つのPythonスクリプトを移動・改名
-3. **SKILL.md の作成**: スキルドキュメントを作成（使用方法、サンプル）
-4. **main.py の作成**: 簡易実行モードと対話形式モードを実装
-5. **設定ファイルの作成**: `config_template.json` と `requirements.txt` を作成
-6. **ドキュメント整備**: 使用例、トラブルシューティング、FAQを追加
-7. **動作確認**: 両モードでテスト実行し、正常に動作することを確認
+1. `manual_to_ppt` パッケージ構成を作成
+2. 共通モジュール化と互換ラッパー化を実施
+3. `main.py` 正式入口を固定
+4. config読込フローと優先順位を明文化
+5. 機械判定ベースの検証計画へ更新
+6. ドキュメントと改訂履歴を整備
 
 ### スキルの特徴
 
-- **簡単実行**: Excelファイルパスを指定するだけで自動変換
-- **対話形式**: ステップバイステップでカスタマイズ可能
-- **CellGenTechデザイン**: ブランドに統一されたプロフェッショナルなデザイン
-- **再利用可能**: 他のExcelマニュアルにも適用可能な汎用スキル
-- **拡張性**: カラースキームやレイアウトのカスタマイズに対応
+- 正式入口が明確で実行条件がぶれない
+- 旧運用を壊さずに新構成へ移行できる
+- 設定解決ルールが明文化され運用判断が不要
+- 回帰検知可能な検証基準を持つ
 
-この計画により、Excelマニュアル→PowerPoint変換機能が、誰でも簡単に使える再利用可能なスキルとして整備されます。
+---
+
+## Revision Scope (2026-02-13 再レビュー反映)
+
+今回更新した章:
+- `## Implementation Plan`（ステップ1-9）
+- `## Public APIs / Interfaces`（新設）
+- `## Critical Files`（全面更新）
+- `## Verification Plan`（全面更新）
+- `## Notes`（整合更新）
+- `## Acceptance Criteria`（新設）
+- `## Assumptions and Defaults`（整合更新）
+- `## Summary`（全面更新）
+
+

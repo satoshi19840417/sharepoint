@@ -17,3 +17,49 @@
 3. 出力先・ロゴ・配色の設定優先順位（CLI > config > default）を仕様として明文化してください。
 4. `config_template.json` のロード処理をステップ4または7に追加し、未設定時フォールバックも記載してください。
 5. 最低限の自動テスト（正常系1件、異常系2件）を検証計画へ追加してください。
+
+## 2026-02-13（再レビュー）
+- 対象ファイル: `plans/wild-wobbling-pine.md`
+- 最終更新日: 2026-02-13 10:53:38
+
+### 指摘事項
+1. [重大] 前回レビューからの修正差分を確認できません。計画本文に、前回の重大指摘（互換性矛盾・import実行条件未定義）を解消する記述追加が見当たりません（`plans/wild-wobbling-pine.md:57`, `plans/wild-wobbling-pine.md:68`, `plans/wild-wobbling-pine.md:152`, `plans/wild-wobbling-pine.md:283`）。
+2. [中] 中優先度指摘（出力先デフォルト不整合、config適用フロー未定義、検証の機械判定不足）も未解消です（`plans/wild-wobbling-pine.md:94`, `plans/wild-wobbling-pine.md:108`, `plans/wild-wobbling-pine.md:127`, `plans/wild-wobbling-pine.md:248`）。
+
+### 推奨対応
+1. 前回指摘の5項目を計画本文へ直接反映し、該当箇所に「方針」「実行コマンド」「優先順位ルール」「合格基準」を明記してください。
+2. 次回レビュー依頼時は、修正した章タイトルまたは行番号帯を併記してください（差分確認が速くなります）。
+
+## 2026-02-13（再レビュー2）
+- 対象ファイル: `plans/wild-wobbling-pine.md`
+- 最終更新日: 2026-02-13 10:53:38
+
+### 指摘事項
+1. [重大] 対象計画書の更新差分を確認できません。前回と同一更新時刻・同一内容のため、重大指摘2件（互換性矛盾、import実行条件未定義）は未解消のままです（`plans/wild-wobbling-pine.md:57`, `plans/wild-wobbling-pine.md:68`, `plans/wild-wobbling-pine.md:152`, `plans/wild-wobbling-pine.md:283`）。
+2. [中] 中優先度の3件（出力先デフォルト整合、config適用フロー、検証の機械判定基準）も未反映です（`plans/wild-wobbling-pine.md:94`, `plans/wild-wobbling-pine.md:108`, `plans/wild-wobbling-pine.md:127`, `plans/wild-wobbling-pine.md:248`）。
+
+### 推奨対応
+1. 修正対象が別ファイルの場合は正しいパスを指定してください。
+2. `plans/wild-wobbling-pine.md` を修正した場合は保存後に再レビューを依頼してください（更新時刻が変わることを確認）。
+
+## 2026-02-13（再レビュー3）
+- 対象ファイル: `plans/wild-wobbling-pine.md`
+- 最終更新日: 2026-02-13 11:19:40
+
+### 指摘事項
+1. [中] 互換import検証コマンドの実行前提が不足しています。計画記載の `python -c "from convert_manual_to_ppt import ..."` はプロジェクトルート実行では `ModuleNotFoundError` となり、`05_mail/scripts` での実行時のみ成立します。検証手順に作業ディレクトリまたは `PYTHONPATH` 条件を明記してください（`plans/wild-wobbling-pine.md:216`）。
+2. [軽微] 正常系の合格条件 `steps_count` / `slides_count` の取得方法が未定義です。観測方法（ログ出力、戻り値、生成物解析スクリプト等）を1行でよいので追記すると、実装者の判断ブレを防げます（`plans/wild-wobbling-pine.md:188`, `plans/wild-wobbling-pine.md:189`）。
+
+### 推奨対応
+1. 互換import回帰テストを以下のように明示してください。例: `cd 05_mail/scripts && python -c "from convert_manual_to_ppt import convert_excel_to_ppt; print(callable(convert_excel_to_ppt))"`。
+2. `steps_count` と `slides_count` の算出元（例: converterのサマリーJSON）を Verification Plan に追記してください。
+
+## 2026-02-13（再レビュー4）
+- 対象ファイル: `plans/wild-wobbling-pine.md`
+- 最終更新日: 2026-02-13 11:23:43
+
+### 指摘事項
+1. 新規指摘なし（前回の未解消2件は反映確認済み）。
+
+### 推奨対応
+1. 計画書レビューは完了。次フェーズで実装に着手して問題ありません。
