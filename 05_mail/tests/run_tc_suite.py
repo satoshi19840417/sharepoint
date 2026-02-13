@@ -1146,6 +1146,7 @@ class TCSuiteRunner:
                         product_name="P",
                         product_features="F",
                         product_url="https://example.com",
+                        maker_code="CODE-61",
                         input_file="tc61.csv",
                         confirm_bulk_send_callback=confirm_mock,
                     )
@@ -1153,8 +1154,8 @@ class TCSuiteRunner:
             if (
                 confirm_mock.call_count == 1
                 and send_mail_mock.call_count == 0
-                and result.get("confirmation_required") is True
-                and result.get("attempted_count") == 0
+                and result.get("exit_code") == 3
+                and result.get("results") == []
             ):
                 return self.pass_result(
                     actual=f"confirmed={confirm_mock.call_args.args[0]}, send_calls={send_mail_mock.call_count}",
@@ -1189,6 +1190,7 @@ class TCSuiteRunner:
                         product_name="P",
                         product_features="F",
                         product_url="https://example.com",
+                        maker_code="CODE-62",
                         input_file="tc62.csv",
                         confirm_bulk_send_callback=confirm_mock,
                     )
@@ -1566,6 +1568,7 @@ class TCSuiteRunner:
                     product_name="P",
                     product_features="F",
                     product_url="https://example.com",
+                    maker_code="CODE-85",
                     input_file="tc85.csv",
                 )
 
@@ -1666,6 +1669,7 @@ class TCSuiteRunner:
                     product_name="P",
                     product_features="F",
                     product_url="https://example.com",
+                    maker_code="CODE-90",
                     input_file="tc90.csv",
                 )
 
@@ -1703,6 +1707,7 @@ class TCSuiteRunner:
                     product_name="P",
                     product_features="F",
                     product_url="https://example.com",
+                    maker_code="CODE-91",
                     input_file="tc91_first.csv",
                 )
                 second = skill.send_bulk(
@@ -1712,6 +1717,7 @@ class TCSuiteRunner:
                     product_name="P",
                     product_features="F",
                     product_url="https://example.com",
+                    maker_code="CODE-91",
                     input_file="tc91_second.csv",
                 )
 

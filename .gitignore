@@ -65,3 +65,5 @@ __pycache__/
 # ===========================================
 temp/
 05_mail/temp/
+05_mail/test_artifacts/
+05_mail/outputs/

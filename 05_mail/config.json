@@ -24,5 +24,10 @@
     "override_backend": "sqlite",
     "idempotency_secret_version": "v1",
     "dedupe_busy_timeout_ms": 15000,
-    "dedupe_retry_attempts": 5
+    "dedupe_retry_attempts": 5,
+    "workflow_mode_default": "legacy",
+    "send_mode_default": "auto",
+    "request_history_retention_days": 365,
+    "hmac_rotation_days": 180,
+    "hmac_credential_service": "見積依頼スキル"
 }

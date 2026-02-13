@@ -62,6 +62,7 @@ class AuditLogger:
         input_file: str,
         results: List[Dict[str, Any]],
         product_info: Optional[Dict[str, str]] = None,
+        workflow_context: Optional[Dict[str, str]] = None,
     ) -> str:
         """
         監査ログを書き込む。
@@ -130,6 +131,11 @@ class AuditLogger:
         entry_dict = asdict(entry)
         if product_info:
             entry_dict["product_info"] = product_info
+        if workflow_context:
+            entry_dict["workflow_context"] = workflow_context
+            for key in ("request_id", "run_id", "workflow_mode", "send_mode"):
+                if key in workflow_context:
+                    entry_dict[key] = workflow_context.get(key, "")
 
         with open(log_file, 'w', encoding='utf-8') as f:
             json.dump(entry_dict, f, ensure_ascii=False, indent=2)

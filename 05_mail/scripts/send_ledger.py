@@ -667,6 +667,34 @@ class SendLedger:
         row = self.conn_main.execute(sql, tuple(params)).fetchone()
         return dict(row) if row is not None else None
 
+    def is_send_blocked_precheck(
+        self,
+        *,
+        request_key: str,
+        v1_key: str,
+        rerun_window_hours: int,
+        run_id: Optional[str] = None,
+    ) -> Tuple[bool, str]:
+        """
+        送信実行前の安全判定（再評価向け）。
+
+        Returns:
+            (blocked, reason)
+        """
+        lock = self.get_unknown_lock(request_key)
+        if lock:
+            return True, "unknown_sent_hold_active"
+
+        recent = self.find_recent_sent(
+            request_key=request_key,
+            v1_key=v1_key,
+            window_hours=rerun_window_hours,
+            run_id=run_id,
+        )
+        if recent:
+            return True, "recent_sent_detected"
+        return False, ""
+
     def find_recent(
         self,
         dedupe_key: str,

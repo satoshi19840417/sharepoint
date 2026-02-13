@@ -35,6 +35,19 @@ description: 業者への見積依頼メール送信を自動化するスキル
 連絡先ファイル: ./業者連絡先.csv
 ```
 
+### 4. 相見積改良フロー（CLI）
+
+```bash
+python 05_mail/scripts/run_aimitsu_workflow.py \
+  --contacts-csv 05_mail/業者連絡先_サンプル.csv \
+  --product-name "検証製品A" \
+  --product-url "https://example.com/product" \
+  --maker-code "TEST-001" \
+  --workflow-mode enhanced \
+  --send-mode draft_only \
+  --hearing-input 05_mail/temp/aimitsu_smoke/hearing_enhanced_draft_only.json
+```
+
 ## 入力ファイル
 
 | ファイル | 形式 | 説明 |
@@ -56,12 +69,26 @@ description: 業者への見積依頼メール送信を自動化するスキル
 | `rerun_scope` | 再実行判定範囲 | `"global"` |
 | `rerun_window_hours` | 再実行ブロック時間 | `24` |
 | `ledger_sqlite_path` | 送信台帳SQLiteパス | `./logs/send_ledger.sqlite3` |
+| `workflow_mode_default` | ワークフロー既定値 | `"legacy"` |
+| `send_mode_default` | 送信モード既定値 | `"auto"` |
+| `request_history_retention_days` | 実行履歴保持日数 | `365` |
+| `hmac_rotation_days` | 履歴HMAC鍵ローテーション日数 | `180` |
 
 ## 出力
 
 - **画面表示**: 送信結果サマリ（メールアドレスはマスク表示）
 - **監査ログ**: `./logs/` に暗号化保存
 - **未送信リスト**: 失敗時に自動生成（再実行に使用可能）
+- **草案Markdown**: `./outputs/drafts`（完了時は `./outputs/completed`、失敗/ブロック時は `./outputs/error`）
+- **手動証跡**: `./outputs/manual_evidence/{request_id}/manual_send_evidence_{run_id}.json`
+- **実行履歴**: `./logs/request_history/{request_id}/{run_id}.json`
+
+## 相見積改良フローの運用注意
+
+- 初期導入は `workflow_mode_default=legacy` のまま運用し、対象ジョブのみ `--workflow-mode enhanced` を付与する。
+- `enhanced + manual` は証跡JSONが一致しない限り `completed` に遷移しない。
+- `enhanced + draft_only` は `user_approved=true` がないと完了扱いにならない。
+- 送信先変更時と送信直前の2回、安全機能（ドメイン制限・重複送信防止）を再評価する。
 
 ## 安全機能
 

@@ -425,6 +425,7 @@ class QuoteRequestSkill:
         input_file: str = "",
         confirm_rerun_callback: Optional[Callable[[ContactRecord, Dict[str, Any]], bool]] = None,
         confirm_bulk_send_callback: Optional[Callable[[int], bool]] = None,
+        workflow_context: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         max_recipients = self.config.get("max_recipients", 50)
         if len(records) > max_recipients:
@@ -843,7 +844,19 @@ class QuoteRequestSkill:
                 "quantity": quantity,
                 "product_url": product_url,
             }
-        audit_log_path = self.audit_logger.write_audit_log(input_file, results, product_info=product_info)
+        if workflow_context is None:
+            audit_log_path = self.audit_logger.write_audit_log(
+                input_file,
+                results,
+                product_info=product_info,
+            )
+        else:
+            audit_log_path = self.audit_logger.write_audit_log(
+                input_file,
+                results,
+                product_info=product_info,
+                workflow_context=workflow_context,
+            )
         sent_list_path = self.audit_logger.write_sent_list(results)
         unsent_list_path = ""
         if any(not r["success"] for r in results):
@@ -877,6 +890,16 @@ class QuoteRequestSkill:
             "dedupe_key_version": dedupe_key_version,
             "exit_code": exit_code,
         }
+
+    def run_aimitsu_workflow(self, **kwargs) -> Dict[str, Any]:
+        """
+        相見積改良ワークフローを実行する。
+        既存 send_bulk API との後方互換を維持するため、別入口として提供する。
+        """
+        from .workflow_service import WorkflowService
+
+        service = WorkflowService(self)
+        return service.execute(**kwargs)
 
     def ensure_encryption_key(self) -> bool:
         """
