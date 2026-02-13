@@ -58,6 +58,7 @@ class OutlookMailSender:
     MESSAGE_ID_PROPERTY_ANSI = "http://schemas.microsoft.com/mapi/proptag/0x1035001E"
     MESSAGE_ID_HEADER_URN = "urn:schemas:mailheader:message-id"
     MESSAGE_HEADER_PROPERTY = "http://schemas.microsoft.com/mapi/proptag/0x007D001F"
+    IDEMPOTENCY_HEADER_URN = "urn:schemas:mailheader:x-idempotency-key"
     SENT_FOLDER_ID = 5  # olFolderSentMail
     SENT_TIME_WINDOW_SEC = 180
     DIRECT_MESSAGE_ID_POLL_INTERVAL_SEC = 0.5
@@ -111,7 +112,9 @@ class OutlookMailSender:
         subject: str,
         body: str,
         company_name: str = "",
-        html_body: Optional[str] = None
+        html_body: Optional[str] = None,
+        idempotency_token: str = "",
+        body_reconcile_marker: str = "",
     ) -> SendResult:
         """
         メールを送信する。
@@ -151,10 +154,23 @@ class OutlookMailSender:
                 mail.To = to
                 mail.Subject = subject
 
-                if html_body:
-                    mail.HTMLBody = html_body
+                text_body = body
+                html_payload = html_body
+                if body_reconcile_marker:
+                    marker = str(body_reconcile_marker).strip()
+                    if marker:
+                        if html_payload:
+                            html_payload = f"{html_payload}<br><br><!-- {marker} -->"
+                        else:
+                            text_body = f"{text_body}\n\n{marker}"
+
+                if html_payload:
+                    mail.HTMLBody = html_payload
                 else:
-                    mail.Body = body
+                    mail.Body = text_body
+
+                if idempotency_token:
+                    self._set_idempotency_header(mail, idempotency_token)
 
                 # 送信前に情報を記録
                 subject_before_send = mail.Subject
@@ -191,6 +207,16 @@ class OutlookMailSender:
                     break
 
         return result
+
+    def _set_idempotency_header(self, mail_item, token: str) -> None:
+        """可能な範囲で idempotency ヘッダを設定する。"""
+        if mail_item is None:
+            return
+        try:
+            mail_item.PropertyAccessor.SetProperty(self.IDEMPOTENCY_HEADER_URN, str(token))
+        except Exception:
+            # 一部環境ではカスタムヘッダ設定に制約があるため無視する。
+            return
 
     def _wait_for_interval(self):
         """送信間隔を確保する"""
@@ -478,6 +504,95 @@ class OutlookMailSender:
             body=body,
             company_name="テスト送信"
         )
+
+    def reconcile_unknown_send(
+        self,
+        token: str,
+        body_marker: str,
+        message_id: str,
+        subject: str,
+        recipient: str,
+    ) -> Dict[str, str]:
+        """
+        UNKNOWN_SENT の回復照合を行う。
+        優先順: header token -> body marker -> message-id -> subject+recipient
+        """
+        if not WIN32COM_AVAILABLE:
+            return {"matched": False, "method": "", "message_id": ""}
+
+        token_norm = str(token or "").strip().lower()
+        marker_norm = str(body_marker or "").strip()
+        message_id_norm = str(message_id or "").strip()
+        subject_norm = str(subject or "").strip()
+        recipient_norm = self._normalize_recipients(recipient)
+
+        try:
+            outlook = self._get_outlook()
+            namespace = outlook.GetNamespace("MAPI")
+            sent_folder = namespace.GetDefaultFolder(self.SENT_FOLDER_ID)
+            items = sent_folder.Items
+            items.Sort("[SentOn]", True)
+
+            scanned = 0
+            for item in items:
+                scanned += 1
+                if scanned > self.MAX_SENT_ITEMS_SCAN:
+                    break
+                try:
+                    headers = str(
+                        item.PropertyAccessor.GetProperty(self.MESSAGE_HEADER_PROPERTY) or ""
+                    )
+                except Exception:
+                    headers = ""
+                header_lower = headers.lower()
+
+                item_message_id = self._extract_message_id_from_item(item)
+                if token_norm and f"x-idempotency-key: {token_norm}" in header_lower:
+                    return {
+                        "matched": True,
+                        "method": "header",
+                        "message_id": item_message_id or "",
+                    }
+
+                if marker_norm:
+                    try:
+                        item_body = str(getattr(item, "Body", "") or "")
+                    except Exception:
+                        item_body = ""
+                    try:
+                        item_html = str(getattr(item, "HTMLBody", "") or "")
+                    except Exception:
+                        item_html = ""
+                    if marker_norm in item_body or marker_norm in item_html:
+                        return {
+                            "matched": True,
+                            "method": "body",
+                            "message_id": item_message_id or "",
+                        }
+
+                if message_id_norm and item_message_id and item_message_id == message_id_norm:
+                    return {
+                        "matched": True,
+                        "method": "message_id",
+                        "message_id": item_message_id,
+                    }
+
+                item_subject = str(getattr(item, "Subject", "")).strip()
+                if subject_norm and item_subject != subject_norm:
+                    continue
+                item_to = self._normalize_recipients(str(getattr(item, "To", "")))
+                if recipient_norm and item_to and not self._recipient_matches(recipient_norm, item_to):
+                    continue
+                if subject_norm:
+                    return {
+                        "matched": True,
+                        "method": "subject_to",
+                        "message_id": item_message_id or self._build_sent_item_surrogate_id(item),
+                    }
+        except Exception:
+            return {"matched": False, "method": "", "message_id": ""}
+
+        return {"matched": False, "method": "", "message_id": ""}
 
     def send_bulk(
         self,

@@ -51,6 +51,11 @@ description: 業者への見積依頼メール送信を自動化するスキル
 | `dry_run` | ドライランモード | false |
 | `domain_whitelist` | 許可ドメインリスト | [] |
 | `domain_blacklist` | 拒否ドメインリスト | [] |
+| `dedupe_key_version` | 再実行判定キーのバージョン | `"v2"` |
+| `rerun_policy_default` | 再実行検知時の既定動作 | `"auto_skip"` |
+| `rerun_scope` | 再実行判定範囲 | `"global"` |
+| `rerun_window_hours` | 再実行ブロック時間 | `24` |
+| `ledger_sqlite_path` | 送信台帳SQLiteパス | `./logs/send_ledger.sqlite3` |
 
 ## 出力
 
@@ -62,7 +67,9 @@ description: 業者への見積依頼メール送信を自動化するスキル
 
 - テスト送信モード（初回は自分宛に送信）
 - ドメイン制限（ホワイトリスト/ブラックリスト）
-- 二重送信防止（Message-ID照合）
+- 二重送信防止（`request_key` + SQLite台帳 + 24h判定）
+- UNKNOWN_SENT 回復（ヘッダHMAC/本文マーカー照合）
+- scoped override（`rerun_override.py` で key/recipient 単位許可）
 - PII混入防止（検索クエリのチェック）
 
 ## 関連ファイル

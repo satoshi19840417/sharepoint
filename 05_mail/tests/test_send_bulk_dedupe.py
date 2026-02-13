@@ -35,10 +35,19 @@ class _AuditStub:
 
 class SendBulkDedupeTests(unittest.TestCase):
     def test_send_bulk_skips_duplicate_in_same_run(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        store = {}
+        with tempfile.TemporaryDirectory() as tmp, mock.patch(
+            "scripts.send_ledger.keyring.get_password",
+            side_effect=lambda service, key: store.get((service, key)),
+        ), mock.patch(
+            "scripts.send_ledger.keyring.set_password",
+            side_effect=lambda service, key, value: store.__setitem__((service, key), value),
+        ):
             skill = QuoteRequestSkill(config_path=str(SKILL_DIR / "config.json"))
             skill.audit_logger = _AuditStub()
+            original_ledger = skill.send_ledger
             skill.send_ledger = SendLedger(str(Path(tmp) / "send_ledger.jsonl"))
+            original_ledger.close()
 
             records = [
                 ContactRecord(company_name="A社", email="dup@example.com", contact_name="A"),
@@ -63,8 +72,10 @@ class SendBulkDedupeTests(unittest.TestCase):
                     product_name="P",
                     product_features="F",
                     product_url="https://example.com",
+                    maker_code="CODE-90",
                     input_file="tc90.csv",
                 )
+            skill.send_ledger.close()
 
         self.assertEqual(send_mock.call_count, 1)
         self.assertEqual(result["skipped_duplicate_count"], 1)

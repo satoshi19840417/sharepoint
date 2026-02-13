@@ -11,5 +11,18 @@
     "domain_blacklist": [],
     "log_retention_days": 90,
     "confirmation_threshold": 5,
-    "credential_target_name": "見積依頼スキル_暗号化鍵"
+    "credential_target_name": "見積依頼スキル_暗号化鍵",
+    "dedupe_key_version": "v2",
+    "rerun_policy_default": "auto_skip",
+    "rerun_scope": "global",
+    "rerun_window_hours": 24,
+    "dedupe_in_progress_ttl_sec": 2700,
+    "dedupe_heartbeat_sec": 30,
+    "unknown_sent_hold_sec": 1800,
+    "ledger_backend": "sqlite",
+    "ledger_sqlite_path": "./logs/send_ledger.sqlite3",
+    "override_backend": "sqlite",
+    "idempotency_secret_version": "v1",
+    "dedupe_busy_timeout_ms": 15000,
+    "dedupe_retry_attempts": 5
 }

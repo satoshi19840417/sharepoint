@@ -1,6 +1,7 @@
 import datetime as dt
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 from unittest import mock
 
@@ -12,6 +13,7 @@ if str(SKILL_DIR) not in sys.path:
 from scripts.csv_handler import ContactRecord
 from scripts.mail_sender import SendResult
 from scripts.main import QuoteRequestSkill
+from scripts.send_ledger import SendLedger
 from scripts.template_processor import TemplateProcessor
 
 
@@ -62,38 +64,47 @@ class ProductInfoFieldTests(unittest.TestCase):
         self.assertIn("1個", result.content)
 
     def test_send_bulk_passes_product_info_to_audit_log(self):
-        skill = QuoteRequestSkill(config_path=str(SKILL_DIR / "config.json"))
-        skill.audit_logger = _AuditStub()
-        skill.send_ledger = mock.Mock()
-        skill.send_ledger.find_recent.return_value = None
-
-        records = [
-            ContactRecord(company_name="A社", email="a@example.com", contact_name="担当者")
-        ]
-
-        with mock.patch.object(
-            skill.mail_sender,
-            "send_mail",
-            return_value=SendResult(
-                success=True,
-                email="a@example.com",
-                company_name="A社",
-                message_id="MID-1",
-                sent_at=dt.datetime.now(),
-            ),
+        with tempfile.TemporaryDirectory() as tmp, mock.patch(
+            "scripts.send_ledger.keyring.get_password",
+            side_effect=lambda service, key: None,
+        ), mock.patch(
+            "scripts.send_ledger.keyring.set_password",
+            side_effect=lambda service, key, value: None,
         ):
-            result = skill.send_bulk(
-                records=records,
-                subject="見積依頼",
-                template_content="製品名: ≪製品名≫",
-                product_name="製品A",
-                product_features="",
-                product_url="https://example.com",
-                maker_name="BIO-RAD",
-                maker_code="170-4156",
-                quantity="1個",
-                input_file="input.csv",
-            )
+            skill = QuoteRequestSkill(config_path=str(SKILL_DIR / "config.json"))
+            skill.audit_logger = _AuditStub()
+            original_ledger = skill.send_ledger
+            skill.send_ledger = SendLedger(str(Path(tmp) / "ledger.sqlite3"))
+            original_ledger.close()
+
+            records = [
+                ContactRecord(company_name="A社", email="a@example.com", contact_name="担当者")
+            ]
+
+            with mock.patch.object(
+                skill.mail_sender,
+                "send_mail",
+                return_value=SendResult(
+                    success=True,
+                    email="a@example.com",
+                    company_name="A社",
+                    message_id="MID-1",
+                    sent_at=dt.datetime.now(),
+                ),
+            ):
+                result = skill.send_bulk(
+                    records=records,
+                    subject="見積依頼",
+                    template_content="製品名: ≪製品名≫",
+                    product_name="製品A",
+                    product_features="",
+                    product_url="https://example.com",
+                    maker_name="BIO-RAD",
+                    maker_code="170-4156",
+                    quantity="1個",
+                    input_file="input.csv",
+                )
+            skill.send_ledger.close()
 
         self.assertTrue(result["success"])
         self.assertEqual(

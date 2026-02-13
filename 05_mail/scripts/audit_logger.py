@@ -89,6 +89,11 @@ class AuditLogger:
                 "success": result.get("success", False),
                 "message_id": result.get("message_id", ""),
                 "sent_at": result.get("sent_at", ""),
+                "request_key": result.get("request_key", result.get("dedupe_key", "")),
+                "mail_key": result.get("mail_key", ""),
+                "dedupe_key_version": result.get("dedupe_key_version", ""),
+                "decision_trace": result.get("decision_trace", []),
+                "action": result.get("action", ""),
             }
             encrypted_details.append(detail)
 

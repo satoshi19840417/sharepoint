@@ -35,10 +35,21 @@ class _AuditStub:
 
 class RerunDetectionTests(unittest.TestCase):
     def test_rerun_within_24h_requires_confirmation_and_skips_by_default(self):
-        with tempfile.TemporaryDirectory() as tmp:
+        store = {}
+        with tempfile.TemporaryDirectory() as tmp, mock.patch(
+            "scripts.send_ledger.keyring.get_password",
+            side_effect=lambda service, key: store.get((service, key)),
+        ), mock.patch(
+            "scripts.send_ledger.keyring.set_password",
+            side_effect=lambda service, key, value: store.__setitem__((service, key), value),
+        ):
             skill = QuoteRequestSkill(config_path=str(SKILL_DIR / "config.json"))
             skill.audit_logger = _AuditStub()
+            original_ledger = skill.send_ledger
             skill.send_ledger = SendLedger(str(Path(tmp) / "send_ledger.jsonl"))
+            original_ledger.close()
+            skill.config["rerun_policy_default"] = "confirm"
+            skill.config["rerun_scope"] = "global"
 
             records = [ContactRecord(company_name="A社", email="a91@example.com", contact_name="A")]
 
@@ -60,6 +71,7 @@ class RerunDetectionTests(unittest.TestCase):
                     product_name="P",
                     product_features="F",
                     product_url="https://example.com",
+                    maker_code="CODE-91",
                     input_file="tc91_first.csv",
                 )
                 second = skill.send_bulk(
@@ -69,8 +81,10 @@ class RerunDetectionTests(unittest.TestCase):
                     product_name="P",
                     product_features="F",
                     product_url="https://example.com",
+                    maker_code="CODE-91",
                     input_file="tc91_second.csv",
                 )
+            skill.send_ledger.close()
 
         self.assertEqual(first["success_count"], 1)
         self.assertEqual(send_mock.call_count, 1)

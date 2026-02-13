@@ -9,9 +9,14 @@ main.py - 見積依頼スキル メインエントリポイント
 5. 監査ログ出力
 """
 
+import datetime as dt
 import json
+import re
 import sys
 import hashlib
+import urllib.parse
+import unicodedata
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Optional, Dict, List, Any, Callable
 from dataclasses import asdict
@@ -24,7 +29,28 @@ from .url_validator import URLValidator
 from .mail_sender import OutlookMailSender
 from .audit_logger import AuditLogger
 from .encryption import EncryptionManager
-from .send_ledger import SendLedger
+from .send_ledger import (
+    SendLedger,
+    STATUS_SKIPPED_DUPLICATE_IN_RUN,
+    STATUS_SKIPPED_CONFIRM_REQUIRED,
+    STATUS_SKIPPED_AUTO,
+)
+
+EXIT_CODE_OK = 0
+EXIT_CODE_CONFIRM_REQUIRED = 3
+EXIT_CODE_INVALID_INPUT = 4
+
+TRACKING_QUERY_PREFIXES = ("utm_",)
+TRACKING_QUERY_KEYS = {
+    "gclid",
+    "fbclid",
+    "msclkid",
+    "mc_cid",
+    "mc_eid",
+    "_ga",
+    "_gl",
+    "yclid",
+}
 
 
 class QuoteRequestSkill:
@@ -63,7 +89,21 @@ class QuoteRequestSkill:
             str(self.base_dir / "logs"),
             self.encryption_manager
         )
-        self.send_ledger = SendLedger(str(self.base_dir / "logs" / "send_ledger.jsonl"))
+        ledger_path_cfg = str(
+            self.config.get("ledger_sqlite_path", "./logs/send_ledger.sqlite3")
+        )
+        ledger_path = (
+            self.base_dir / ledger_path_cfg
+            if not Path(ledger_path_cfg).is_absolute()
+            else Path(ledger_path_cfg)
+        )
+        self.send_ledger = SendLedger(
+            str(ledger_path),
+            retention_days=self.config.get("log_retention_days", 90),
+            busy_timeout_ms=self.config.get("dedupe_busy_timeout_ms", 15000),
+            backoff_attempts=self.config.get("dedupe_retry_attempts", 5),
+            credential_target_name=self.config.get("credential_target_name"),
+        )
 
     def _load_config(self) -> Dict[str, Any]:
         """設定ファイルを読み込む"""
@@ -138,6 +178,117 @@ class QuoteRequestSkill:
             "companies_found": result.companies_found,
         }
 
+    @staticmethod
+    def _normalize_text(value: str) -> str:
+        normalized = unicodedata.normalize("NFKC", str(value or ""))
+        normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")
+        return normalized.strip()
+
+    @staticmethod
+    def _normalize_email(value: str) -> str:
+        raw = QuoteRequestSkill._normalize_text(value).lower()
+        match = re.search(
+            r"([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})",
+            raw,
+        )
+        return match.group(1) if match else raw
+
+    @staticmethod
+    def _normalize_maker_code(value: str) -> str:
+        return QuoteRequestSkill._normalize_text(value).lower()
+
+    @staticmethod
+    def _normalize_subject(value: str) -> str:
+        normalized = QuoteRequestSkill._normalize_text(value)
+        return re.sub(r"\s+", " ", normalized)
+
+    @staticmethod
+    def _normalize_quantity(value: str) -> str:
+        normalized = QuoteRequestSkill._normalize_text(value)
+        if not normalized:
+            return ""
+        compact = normalized.replace(",", "")
+        try:
+            parsed = Decimal(compact)
+            canonical = parsed.normalize()
+            if canonical == canonical.to_integral():
+                return str(canonical.quantize(Decimal("1")))
+            return format(canonical, "f").rstrip("0").rstrip(".")
+        except (InvalidOperation, ValueError):
+            return normalized.lower()
+
+    @staticmethod
+    def _is_tracking_query_key(key: str) -> bool:
+        key_lower = str(key or "").strip().lower()
+        if key_lower in TRACKING_QUERY_KEYS:
+            return True
+        return any(key_lower.startswith(prefix) for prefix in TRACKING_QUERY_PREFIXES)
+
+    @staticmethod
+    def _normalize_input_url(url: str) -> str:
+        raw = QuoteRequestSkill._normalize_text(url)
+        if not raw:
+            return ""
+        parsed = urllib.parse.urlsplit(raw)
+        scheme = parsed.scheme.lower()
+        netloc = parsed.netloc.lower().strip()
+        if ":" in netloc:
+            host, port = netloc.rsplit(":", 1)
+            if (scheme == "https" and port == "443") or (scheme == "http" and port == "80"):
+                netloc = host
+        path = parsed.path or "/"
+        try:
+            path = urllib.parse.quote(urllib.parse.unquote(path), safe="/:@-._~!$&'()*+,;=")
+        except Exception:
+            pass
+        query_pairs = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+        filtered = [
+            (k, v) for (k, v) in query_pairs
+            if not QuoteRequestSkill._is_tracking_query_key(k)
+        ]
+        filtered.sort(key=lambda pair: (pair[0], pair[1]))
+        normalized_query = urllib.parse.urlencode(filtered, doseq=True)
+        return urllib.parse.urlunsplit((scheme, netloc, path, normalized_query, ""))
+
+    @staticmethod
+    def _build_request_key(
+        recipient_email_norm: str,
+        maker_code_norm: str,
+        canonical_input_url_norm: str,
+        quantity_norm: str,
+        key_version: str,
+    ) -> str:
+        payload = "\n".join([
+            recipient_email_norm,
+            maker_code_norm,
+            canonical_input_url_norm,
+            quantity_norm,
+        ])
+        digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        return f"rq:{key_version}:{digest}"
+
+    @staticmethod
+    def _build_mail_key(
+        recipient_email_norm: str,
+        subject_norm: str,
+        body_fingerprint_norm: str,
+    ) -> str:
+        payload = "\n".join([recipient_email_norm, subject_norm, body_fingerprint_norm])
+        digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        return f"mk:v2:{digest}"
+
+    @staticmethod
+    def _build_legacy_v1_key(email: str, subject: str, template_content: str) -> str:
+        normalized_email = str(email or "").strip().lower()
+        payload = f"{subject}\n{template_content}"
+        payload_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+        return f"{normalized_email}:{payload_hash}"
+
+    @staticmethod
+    def _build_body_fingerprint(value: str) -> str:
+        normalized = QuoteRequestSkill._normalize_text(value)
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
     def validate_url(self, url: str) -> Dict[str, Any]:
         """
         URLの有効性をチェックする。
@@ -146,6 +297,27 @@ class QuoteRequestSkill:
             {"valid": bool, "error": str, "warning": str}
         """
         result = self.url_validator.validate(url)
+        canonical_input_url = self._normalize_input_url(url)
+        final_url = str(result.final_url or "")
+        final_host = ""
+        if final_url:
+            try:
+                final_host = urllib.parse.urlsplit(final_url).netloc.lower()
+            except Exception:
+                final_host = ""
+        fingerprint = hashlib.sha256(final_url.encode("utf-8")).hexdigest() if final_url else ""
+        resolve_status = "valid" if result.valid else "invalid"
+        try:
+            self.send_ledger.record_url_alias(
+                canonical_input_url=canonical_input_url,
+                last_final_url=final_url,
+                final_host=final_host,
+                redirect_hops=0,
+                final_url_fingerprint=fingerprint,
+                resolve_status=resolve_status,
+            )
+        except Exception:
+            pass
 
         return {
             "valid": result.valid,
@@ -236,11 +408,8 @@ class QuoteRequestSkill:
 
     @staticmethod
     def _build_dedupe_key(email: str, subject: str, body: str) -> str:
-        """同一送信判定キーを生成する。"""
-        normalized_email = str(email or "").strip().lower()
-        payload = f"{subject}\n{body}"
-        payload_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-        return f"{normalized_email}:{payload_hash}"
+        """互換API: v1 dedupe keyを生成する。"""
+        return QuoteRequestSkill._build_legacy_v1_key(email, subject, body)
 
     def send_bulk(
         self,
@@ -257,81 +426,131 @@ class QuoteRequestSkill:
         confirm_rerun_callback: Optional[Callable[[ContactRecord, Dict[str, Any]], bool]] = None,
         confirm_bulk_send_callback: Optional[Callable[[int], bool]] = None,
     ) -> Dict[str, Any]:
-        """
-        一斉送信を実行する。
-
-        Returns:
-            送信結果サマリ
-        """
-        # 件数上限チェック
         max_recipients = self.config.get("max_recipients", 50)
         if len(records) > max_recipients:
             return {
                 "success": False,
                 "error": f"送信件数が上限を超えています: {len(records)} > {max_recipients}",
+                "exit_code": EXIT_CODE_INVALID_INPUT,
             }
 
-        # 確認閾値チェック
+        maker_code_norm = self._normalize_maker_code(maker_code)
+        canonical_input_url = self._normalize_input_url(product_url)
+        if not maker_code_norm:
+            return {"success": False, "error": "maker_code は必須です。", "exit_code": EXIT_CODE_INVALID_INPUT}
+        if not canonical_input_url:
+            return {"success": False, "error": "product_url は必須です。", "exit_code": EXIT_CODE_INVALID_INPUT}
+
+        dedupe_key_version = str(self.config.get("dedupe_key_version", "v2"))
+        rerun_policy_default = str(self.config.get("rerun_policy_default", "auto_skip"))
+        rerun_scope = str(self.config.get("rerun_scope", "global"))
+        rerun_window_hours = int(self.config.get("rerun_window_hours", 24))
+        in_progress_ttl_sec = int(self.config.get("dedupe_in_progress_ttl_sec", 2700))
+        dedupe_heartbeat_sec = int(self.config.get("dedupe_heartbeat_sec", 30))
+        unknown_sent_hold_sec = int(self.config.get("unknown_sent_hold_sec", 1800))
+        idempotency_secret_version = str(self.config.get("idempotency_secret_version", "v1"))
+
+        self.send_ledger.cleanup_on_batch_start(rerun_window_hours, unknown_sent_hold_sec)
+        self.send_ledger.record_url_alias(
+            canonical_input_url=canonical_input_url,
+            last_final_url="",
+            final_host=urllib.parse.urlsplit(canonical_input_url).netloc.lower(),
+            redirect_hops=0,
+            final_url_fingerprint="",
+            resolve_status="input_only",
+        )
+
         confirmation_threshold = self.config.get("confirmation_threshold", 5)
-        if len(records) >= confirmation_threshold:
-            print(f"警告: {len(records)}件のメールを送信します。")
-            if confirm_bulk_send_callback is not None:
-                try:
-                    confirmed = bool(confirm_bulk_send_callback(len(records)))
-                except Exception as callback_error:
-                    callback_message = f"送信前確認コールバックエラー: {callback_error}"
+        if len(records) >= confirmation_threshold and confirm_bulk_send_callback is not None:
+            try:
+                if not bool(confirm_bulk_send_callback(len(records))):
                     return {
                         "success": False,
-                        "error": callback_message,
-                        "total": len(records),
-                        "attempted_count": 0,
-                        "success_count": 0,
-                        "failure_count": 0,
-                        "skipped_duplicate_count": 0,
-                        "skipped_rerun_count": 0,
-                        "audit_log_path": "",
-                        "sent_list_path": "",
-                        "unsent_list_path": "",
-                        "screen_output": "",
-                        "warning": callback_message,
-                        "warnings": [callback_message],
+                        "error": f"{len(records)}件の送信は確認によりキャンセルされました。",
                         "results": [],
-                        "confirmation_required": True,
+                        "warnings": [],
+                        "warning": "",
+                        "exit_code": EXIT_CODE_CONFIRM_REQUIRED,
                     }
+            except Exception as callback_error:
+                return {
+                    "success": False,
+                    "error": f"送信前確認コールバックエラー: {callback_error}",
+                    "results": [],
+                    "warnings": [],
+                    "warning": "",
+                    "exit_code": EXIT_CODE_CONFIRM_REQUIRED,
+                }
 
-                if not confirmed:
-                    cancel_message = (
-                        f"{len(records)}件の送信は確認によりキャンセルされました。"
-                    )
-                    return {
-                        "success": False,
-                        "error": cancel_message,
-                        "total": len(records),
-                        "attempted_count": 0,
-                        "success_count": 0,
-                        "failure_count": 0,
-                        "skipped_duplicate_count": 0,
-                        "skipped_rerun_count": 0,
-                        "audit_log_path": "",
-                        "sent_list_path": "",
-                        "unsent_list_path": "",
-                        "screen_output": "",
-                        "warning": cancel_message,
-                        "warnings": [cancel_message],
-                        "results": [],
-                        "confirmation_required": True,
-                    }
+        run_id = getattr(self.audit_logger, "execution_id", "")
+        run_scope = run_id if rerun_scope == "same_run" else None
+        quantity_norm = self._normalize_quantity(quantity)
+        subject_norm = self._normalize_subject(subject)
+        non_interactive = confirm_rerun_callback is None
 
-        results = []
+        results: List[Dict[str, Any]] = []
         warnings: List[str] = []
-        seen_dedupe_keys = set()
+        seen_request_keys = set()
         skipped_duplicate_count = 0
         skipped_rerun_count = 0
-        run_id = getattr(self.audit_logger, "execution_id", "")
-        rerun_scope_run_id = run_id if self.config.get("test_mode", False) else None
+        confirmation_required_count = 0
+
+        def add_skip(
+            *,
+            record: ContactRecord,
+            request_key: str,
+            mail_key: str,
+            v1_key: str,
+            recipient_hash: str,
+            idempotency_token: str,
+            decision_trace: List[str],
+            message: str,
+            action: str,
+            status: str,
+            confirmation_required: bool,
+            count_as_rerun: bool = True,
+        ) -> None:
+            nonlocal skipped_rerun_count, confirmation_required_count
+            if count_as_rerun:
+                skipped_rerun_count += 1
+            if confirmation_required:
+                confirmation_required_count += 1
+            warnings.append(message)
+            self.send_ledger.mark_skipped(
+                request_key=request_key,
+                v1_key=v1_key,
+                key_version=dedupe_key_version,
+                run_id=run_id,
+                mail_key=mail_key,
+                recipient_hash=recipient_hash,
+                idempotency_token=idempotency_token,
+                idempotency_secret_version=idempotency_secret_version,
+                subject_norm=subject_norm,
+                status=status,
+                decision_trace=decision_trace,
+                error=message,
+            )
+            results.append({
+                "email": record.email,
+                "company_name": record.company_name,
+                "success": False,
+                "message_id": "",
+                "error": message,
+                "sent_at": "",
+                "is_fallback_id": False,
+                "message_id_source": "",
+                "dedupe_key": request_key,
+                "request_key": request_key,
+                "mail_key": mail_key,
+                "dedupe_key_version": dedupe_key_version,
+                "decision_trace": list(decision_trace),
+                "skipped": True,
+                "action": action,
+                "skip_duplicate_in_run": action == "skip_duplicate_in_run",
+                "confirmation_required": confirmation_required,
+            })
 
         for record in records:
-            # 本文生成
             body = self.render_email(
                 template_content=template_content,
                 record=record,
@@ -342,116 +561,279 @@ class QuoteRequestSkill:
                 maker_code=maker_code,
                 quantity=quantity,
             )
-            dedupe_key = self._build_dedupe_key(record.email, subject, template_content)
-
-            # 同一実行内重複チェック
-            if dedupe_key in seen_dedupe_keys:
-                skipped_duplicate_count += 1
-                warning_message = (
-                    f"同一実行内の重複送信をスキップしました: {record.email}"
-                )
-                warnings.append(warning_message)
-                results.append({
-                    "email": record.email,
-                    "company_name": record.company_name,
-                    "success": False,
-                    "message_id": "",
-                    "error": warning_message,
-                    "sent_at": "",
-                    "is_fallback_id": False,
-                    "message_id_source": "",
-                    "dedupe_key": dedupe_key,
-                    "skipped": True,
-                    "action": "skip_duplicate_in_run",
-                    "skip_duplicate_in_run": True,
-                    "confirmation_required": False,
-                })
-                continue
-            seen_dedupe_keys.add(dedupe_key)
-
-            # 24時間以内再実行チェック
-            recent_entry = self.send_ledger.find_recent(
-                dedupe_key,
-                window_hours=24,
-                run_id=rerun_scope_run_id,
+            recipient_email_norm = self._normalize_email(record.email)
+            request_key = self._build_request_key(
+                recipient_email_norm,
+                maker_code_norm,
+                canonical_input_url,
+                quantity_norm,
+                dedupe_key_version,
             )
-            if recent_entry:
-                should_send = False
-                if confirm_rerun_callback is not None:
-                    try:
-                        should_send = bool(confirm_rerun_callback(record, recent_entry))
-                    except Exception as callback_error:
-                        warnings.append(
-                            f"再実行確認コールバックエラー: {callback_error}"
-                        )
-                        should_send = False
+            mail_key = self._build_mail_key(
+                recipient_email_norm,
+                subject_norm,
+                self._build_body_fingerprint(body),
+            )
+            v1_key = self._build_legacy_v1_key(record.email, subject, template_content)
+            recipient_hash = self.send_ledger.hash_recipient(recipient_email_norm)
+            idempotency_token = self.send_ledger.build_idempotency_token(
+                request_key,
+                idempotency_secret_version,
+            )
+            body_marker = f"[IDEMP:{idempotency_token[:24]}]"
+            decision_trace = [f"request_key={request_key}", f"mail_key={mail_key}"]
 
-                if not should_send:
-                    skipped_rerun_count += 1
-                    warning_message = (
-                        "24時間以内の再実行を検知しました。"
-                        f"確認未実施のため送信をスキップ: {record.email}"
+            if request_key in seen_request_keys:
+                skipped_duplicate_count += 1
+                add_skip(
+                    record=record,
+                    request_key=request_key,
+                    mail_key=mail_key,
+                    v1_key=v1_key,
+                    recipient_hash=recipient_hash,
+                    idempotency_token=idempotency_token,
+                    decision_trace=decision_trace + ["duplicate_in_run=true"],
+                    message=f"同一実行内の重複送信をスキップしました: {record.email}",
+                    action="skip_duplicate_in_run",
+                    status=STATUS_SKIPPED_DUPLICATE_IN_RUN,
+                    confirmation_required=False,
+                    count_as_rerun=False,
+                )
+                continue
+            seen_request_keys.add(request_key)
+
+            override_decision = self.send_ledger.evaluate_override(request_key, recipient_hash)
+            decision_trace.extend(override_decision.trace)
+
+            unknown_lock = self.send_ledger.get_unknown_lock(request_key)
+            if unknown_lock:
+                matched = False
+                method = ""
+                message_id = ""
+                try:
+                    reconcile = self.mail_sender.reconcile_unknown_send(
+                        token=idempotency_token,
+                        body_marker=body_marker,
+                        message_id=str(unknown_lock.get("last_message_id", "")),
+                        subject=subject_norm,
+                        recipient=record.email,
                     )
-                    warnings.append(warning_message)
-                    results.append({
-                        "email": record.email,
-                        "company_name": record.company_name,
-                        "success": False,
-                        "message_id": "",
-                        "error": warning_message,
-                        "error_details": {
-                            "confirmation_required": True,
-                            "previous_send": {
-                                "timestamp": recent_entry.get("timestamp", ""),
-                                "message_id": recent_entry.get("message_id", ""),
-                                "run_id": recent_entry.get("run_id", ""),
-                            },
-                        },
-                        "sent_at": "",
-                        "is_fallback_id": False,
-                        "message_id_source": "",
-                        "dedupe_key": dedupe_key,
-                        "skipped": True,
-                        "action": "skip_rerun_confirmation_required",
-                        "skip_duplicate_in_run": False,
-                        "confirmation_required": True,
-                    })
+                    matched = bool(reconcile.get("matched"))
+                    method = str(reconcile.get("method", ""))
+                    message_id = str(reconcile.get("message_id", ""))
+                except Exception:
+                    matched = False
+                if matched:
+                    self.send_ledger.mark_reconciled_sent(
+                        request_key=request_key,
+                        run_id=run_id,
+                        decision_trace=decision_trace + [f"unknown_reconciled={method}"],
+                        reconciled_message_id=message_id,
+                        reconciled_source=method or "reconcile",
+                    )
+                    add_skip(
+                        record=record,
+                        request_key=request_key,
+                        mail_key=mail_key,
+                        v1_key=v1_key,
+                        recipient_hash=recipient_hash,
+                        idempotency_token=idempotency_token,
+                        decision_trace=decision_trace + [f"unknown_reconciled={method}"],
+                        message="UNKNOWN_SENTを照合してSENTへ昇格したため送信をスキップしました。",
+                        action="skip_reconciled_sent",
+                        status=STATUS_SKIPPED_AUTO,
+                        confirmation_required=False,
+                    )
                     continue
 
-            # 送信
+                should_send_unknown = False
+                if confirm_rerun_callback is not None:
+                    try:
+                        should_send_unknown = bool(confirm_rerun_callback(record, {"status": STATUS_UNKNOWN_SENT}))
+                    except Exception:
+                        should_send_unknown = False
+                if not should_send_unknown:
+                    add_skip(
+                        record=record,
+                        request_key=request_key,
+                        mail_key=mail_key,
+                        v1_key=v1_key,
+                        recipient_hash=recipient_hash,
+                        idempotency_token=idempotency_token,
+                        decision_trace=decision_trace + ["unknown_sent_unresolved=true"],
+                        message=f"UNKNOWN_SENT未回復のため送信をスキップしました: {record.email}",
+                        action="skip_unknown_sent_confirm_required",
+                        status=STATUS_SKIPPED_CONFIRM_REQUIRED,
+                        confirmation_required=True,
+                    )
+                    continue
+                self.send_ledger.clear_unknown_lock_for_manual_override(request_key)
+
+            recent_entry = self.send_ledger.find_recent_sent(
+                request_key=request_key,
+                v1_key=v1_key,
+                window_hours=rerun_window_hours,
+                run_id=run_scope,
+            )
+            if recent_entry and not override_decision.allowed:
+                should_send = False
+                if rerun_policy_default == "confirm" and confirm_rerun_callback is not None:
+                    try:
+                        should_send = bool(confirm_rerun_callback(record, recent_entry))
+                    except Exception:
+                        should_send = False
+                if rerun_policy_default == "auto_skip" or not should_send:
+                    add_skip(
+                        record=record,
+                        request_key=request_key,
+                        mail_key=mail_key,
+                        v1_key=v1_key,
+                        recipient_hash=recipient_hash,
+                        idempotency_token=idempotency_token,
+                        decision_trace=decision_trace + ["recent_sent_detected=true"],
+                        message=f"24時間以内の再実行を検知したため送信をスキップしました: {record.email}",
+                        action="skip_rerun_auto_skip" if rerun_policy_default == "auto_skip" else "skip_rerun_confirmation_required",
+                        status=STATUS_SKIPPED_AUTO if rerun_policy_default == "auto_skip" else STATUS_SKIPPED_CONFIRM_REQUIRED,
+                        confirmation_required=rerun_policy_default != "auto_skip",
+                    )
+                    continue
+
+            reservation = self.send_ledger.reserve_send(
+                request_key=request_key,
+                v1_key=v1_key,
+                key_version=dedupe_key_version,
+                run_id=run_id,
+                mail_key=mail_key,
+                recipient_hash=recipient_hash,
+                idempotency_token=idempotency_token,
+                idempotency_secret_version=idempotency_secret_version,
+                subject_norm=subject_norm,
+                ttl_sec=in_progress_ttl_sec,
+                decision_trace=decision_trace,
+            )
+            if not reservation.acquired:
+                add_skip(
+                    record=record,
+                    request_key=request_key,
+                    mail_key=mail_key,
+                    v1_key=v1_key,
+                    recipient_hash=recipient_hash,
+                    idempotency_token=idempotency_token,
+                    decision_trace=decision_trace + [f"reservation={reservation.reason}"],
+                    message=f"送信ロックを確保できなかったため送信をスキップしました: {record.email}",
+                    action="skip_lock_conflict",
+                    status=STATUS_SKIPPED_CONFIRM_REQUIRED,
+                    confirmation_required=True,
+                )
+                continue
+
+            self.send_ledger.heartbeat(request_key, dedupe_heartbeat_sec)
             send_result = self.mail_sender.send_mail(
                 to=record.email,
                 subject=subject,
                 body=body,
                 company_name=record.company_name,
+                idempotency_token=idempotency_token,
+                body_reconcile_marker=body_marker,
             )
+            if send_result.success:
+                try:
+                    self.send_ledger.mark_sent(
+                        request_key=request_key,
+                        v1_key=v1_key,
+                        key_version=dedupe_key_version,
+                        run_id=run_id,
+                        mail_key=mail_key,
+                        recipient_hash=recipient_hash,
+                        message_id=send_result.message_id,
+                        message_id_source=send_result.message_id_source,
+                        idempotency_token=idempotency_token,
+                        idempotency_secret_version=idempotency_secret_version,
+                        subject_norm=subject_norm,
+                        decision_trace=decision_trace,
+                        sent_at=send_result.sent_at,
+                    )
+                    send_success = True
+                    send_error = ""
+                    action = "sent"
+                    confirmation_required = False
+                except Exception as ledger_error:
+                    send_success = False
+                    send_error = f"送信後のSENT確定に失敗したためUNKNOWN_SENTとして保留: {ledger_error}"
+                    action = "unknown_sent_pending"
+                    confirmation_required = True
+                    confirmation_required_count += 1
+                    warnings.append(send_error)
+                    self.send_ledger.mark_unknown_sent(
+                        request_key=request_key,
+                        v1_key=v1_key,
+                        key_version=dedupe_key_version,
+                        run_id=run_id,
+                        mail_key=mail_key,
+                        recipient_hash=recipient_hash,
+                        idempotency_token=idempotency_token,
+                        idempotency_secret_version=idempotency_secret_version,
+                        subject_norm=subject_norm,
+                        decision_trace=decision_trace + ["sent_commit=unknown"],
+                        error=send_error,
+                        hold_sec=unknown_sent_hold_sec,
+                        message_id=send_result.message_id,
+                        message_id_source=send_result.message_id_source,
+                    )
+                results.append({
+                    "email": record.email,
+                    "company_name": record.company_name,
+                    "success": send_success,
+                    "message_id": send_result.message_id,
+                    "error": send_error,
+                    "sent_at": send_result.sent_at.isoformat() if send_result.sent_at else "",
+                    "is_fallback_id": send_result.is_fallback_id,
+                    "message_id_source": send_result.message_id_source,
+                    "dedupe_key": request_key,
+                    "request_key": request_key,
+                    "mail_key": mail_key,
+                    "dedupe_key_version": dedupe_key_version,
+                    "decision_trace": decision_trace,
+                    "skipped": False,
+                    "action": action,
+                    "skip_duplicate_in_run": False,
+                    "confirmation_required": confirmation_required,
+                })
+                continue
 
+            self.send_ledger.mark_failed_pre_send(
+                request_key=request_key,
+                v1_key=v1_key,
+                key_version=dedupe_key_version,
+                run_id=run_id,
+                mail_key=mail_key,
+                recipient_hash=recipient_hash,
+                idempotency_token=idempotency_token,
+                idempotency_secret_version=idempotency_secret_version,
+                subject_norm=subject_norm,
+                decision_trace=decision_trace,
+                error=send_result.error,
+            )
             results.append({
                 "email": record.email,
                 "company_name": record.company_name,
-                "success": send_result.success,
+                "success": False,
                 "message_id": send_result.message_id,
                 "error": send_result.error,
                 "sent_at": send_result.sent_at.isoformat() if send_result.sent_at else "",
                 "is_fallback_id": send_result.is_fallback_id,
                 "message_id_source": send_result.message_id_source,
-                "dedupe_key": dedupe_key,
+                "dedupe_key": request_key,
+                "request_key": request_key,
+                "mail_key": mail_key,
+                "dedupe_key_version": dedupe_key_version,
+                "decision_trace": decision_trace,
                 "skipped": False,
-                "action": "sent",
+                "action": "failed_pre_send",
                 "skip_duplicate_in_run": False,
                 "confirmation_required": False,
             })
 
-            if send_result.success:
-                self.send_ledger.append_entry(
-                    dedupe_key=dedupe_key,
-                    recipient=record.email,
-                    message_id=send_result.message_id,
-                    run_id=run_id,
-                    sent_at=send_result.sent_at,
-                )
-
-        # 監査ログ出力
         product_info = None
         if product_name or maker_name or maker_code or quantity or product_url:
             product_info = {
@@ -461,34 +843,30 @@ class QuoteRequestSkill:
                 "quantity": quantity,
                 "product_url": product_url,
             }
-        audit_log_path = self.audit_logger.write_audit_log(
-            input_file,
-            results,
-            product_info=product_info,
-        )
-
-        # 送信済み/未送信リスト出力
+        audit_log_path = self.audit_logger.write_audit_log(input_file, results, product_info=product_info)
         sent_list_path = self.audit_logger.write_sent_list(results)
         unsent_list_path = ""
         if any(not r["success"] for r in results):
             unsent_list_path = self.audit_logger.write_unsent_list(results)
 
-        # 画面表示用出力
         screen_output = self.audit_logger.format_screen_output(results)
-
         attempted_results = [r for r in results if not r.get("skipped")]
         success_count = sum(1 for r in attempted_results if r["success"])
         failure_count = sum(1 for r in attempted_results if not r["success"])
         warning_text = "; ".join(warnings)
 
+        exit_code = EXIT_CODE_OK
+        if confirmation_required_count > 0 and non_interactive:
+            exit_code = EXIT_CODE_CONFIRM_REQUIRED
         return {
-            "success": failure_count == 0,
+            "success": failure_count == 0 and confirmation_required_count == 0,
             "total": len(results),
             "attempted_count": len(attempted_results),
             "success_count": success_count,
             "failure_count": failure_count,
             "skipped_duplicate_count": skipped_duplicate_count,
             "skipped_rerun_count": skipped_rerun_count,
+            "confirmation_required_count": confirmation_required_count,
             "audit_log_path": audit_log_path,
             "sent_list_path": sent_list_path,
             "unsent_list_path": unsent_list_path,
@@ -496,6 +874,8 @@ class QuoteRequestSkill:
             "warning": warning_text,
             "warnings": warnings,
             "results": results,
+            "dedupe_key_version": dedupe_key_version,
+            "exit_code": exit_code,
         }
 
     def ensure_encryption_key(self) -> bool:
